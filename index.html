@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4338ca">
+<title>Banco de Questões</title>
+<style>
+  :root{
+    --bg:#f3f2ef;
+    --surface:#ffffff;
+    --surface-2:#faf9f7;
+    --ink:#1c1b22;
+    --ink-soft:#5a5870;
+    --line:#e3e1da;
+    --accent:#4338ca;
+    --accent-soft:#ece9ff;
+    --ok:#157f4b;
+    --ok-soft:#e3f5ea;
+    --err:#c0334a;
+    --err-soft:#fbe7ea;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(20,18,40,.06), 0 8px 28px rgba(20,18,40,.06);
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#131219;--surface:#1d1c25;--surface-2:#242330;--ink:#f1f0f6;--ink-soft:#a6a4bc;
+      --line:#322f3d;--accent:#a99dff;--accent-soft:#2a2640;--ok:#5fd99a;--ok-soft:#1b2f25;
+      --err:#ff8a9c;--err-soft:#33212a;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans);background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px 96px;}
+  /* top bar */
+  .bar{
+    position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%, transparent);
+    backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid var(--line);
+    padding:max(10px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;
+  }
+  .bar .brand{font-weight:700;font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .bar .dot{width:10px;height:10px;border-radius:3px;background:var(--accent);transform:rotate(12deg)}
+  .bar .spacer{flex:1}
+  .iconbtn{
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
+    width:38px;height:38px;font-size:18px;cursor:pointer;display:grid;place-items:center;
+  }
+  .iconbtn:active{transform:scale(.96)}
+  .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+  h1{font-size:26px;letter-spacing:-.02em;margin:14px 0 2px}
+  h2{font-size:19px;letter-spacing:-.01em;margin:0 0 10px}
+  p.lead{color:var(--ink-soft);margin:2px 0 18px}
+  .view{display:none;animation:fade .22s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:0 0 14px}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 20px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 12px;text-align:left}
+  .stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .stat .lab{font:600 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
+  .stat .num.due{color:var(--accent)}
+  /* mode buttons */
+  .modes{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  .mode{
+    width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:var(--radius);padding:15px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;
+    box-shadow:var(--shadow);transition:transform .08s,border-color .15s;
+  }
+  .mode:active{transform:scale(.99)}
+  .mode .ic{width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:20px;flex:none}
+  .mode .tt{font-weight:650;font-size:15px}
+  .mode .ss{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+  .mode .ct{margin-left:auto;font:700 13px/1 var(--mono);color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);padding:6px 9px;border-radius:9px}
+  .mode[disabled]{opacity:.45;cursor:not-allowed}
+  /* generic buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;border:1px solid var(--accent);
+    background:var(--accent);color:#fff;font-weight:650;font-size:15px;padding:13px 16px;cursor:pointer;width:100%}
+  .btn:active{transform:scale(.99)}
+  .btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+  .btn.danger{background:var(--err);border-color:var(--err)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+  /* quiz */
+  .qhead{display:flex;align-items:center;gap:10px;margin:6px 0 12px}
+  .progressbar{flex:1;height:7px;background:var(--line);border-radius:99px;overflow:hidden}
+  .progressbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s ease}
+  .qcount{font:700 12px/1 var(--mono);color:var(--ink-soft);white-space:nowrap}
+  .qmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tag{font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);padding:6px 9px;border-radius:99px}
+  .tag.box{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+  .enun{font-size:18px;font-weight:600;letter-spacing:-.01em;margin:4px 0 18px;line-height:1.42}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{
+    display:flex;align-items:flex-start;gap:12px;text-align:left;width:100%;cursor:pointer;
+    border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:14px;padding:13px 14px;font-size:15px;transition:border-color .12s,background .12s;
+  }
+  .opt:active{transform:scale(.995)}
+  .opt .k{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);
+    display:grid;place-items:center;font:700 13px/1 var(--mono);color:var(--ink-soft)}
+  .opt .tx{padding-top:2px}
+  .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .opt.sel .k{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok);background:var(--ok-soft)}
+  .opt.correct .k{background:var(--ok);color:#fff;border-color:var(--ok)}
+  .opt.wrong{border-color:var(--err);background:var(--err-soft)}
+  .opt.wrong .k{background:var(--err);color:#fff;border-color:var(--err)}
+  .opt.locked{cursor:default}
+  .feedback{margin-top:16px;border-radius:14px;padding:14px;border:1px solid var(--line);background:var(--surface-2);display:none}
+  .feedback.show{display:block}
+  .feedback .verdict{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .feedback.ok .verdict{color:var(--ok)}
+  .feedback.no .verdict{color:var(--err)}
+  .feedback .exp{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
+  /* sticky action */
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:none}
+  .dock.show{display:block}
+  .dock .inner{max-width:560px;margin:0 auto}
+  /* stats view */
+  .tema-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .tema-row:last-child{border-bottom:none}
+  .tema-row .nm{font-weight:600;font-size:14.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tema-row .pct{font:700 14px/1 var(--mono);width:48px;text-align:right}
+  .minibar{width:90px;height:8px;border-radius:99px;background:var(--line);overflow:hidden;flex:none}
+  .minibar i{display:block;height:100%;background:var(--ok)}
+  /* import */
+  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:26px 16px;text-align:center;color:var(--ink-soft);cursor:pointer;background:var(--surface-2)}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:var(--mono);font-size:13px;background:var(--surface);color:var(--ink);resize:vertical}
+  .hint{font-size:13px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--accent-soft);color:var(--accent);padding:2px 6px;border-radius:6px}
+  label.field{display:block;font-weight:600;font-size:13px;margin:14px 0 6px}
+  .switch{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+  .switch:last-child{border-bottom:none}
+  .switch .lab{font-weight:600;font-size:14.5px}
+  .switch .sub{font-size:12.5px;color:var(--ink-soft)}
+  .toggle{position:relative;width:48px;height:28px;flex:none;cursor:pointer}
+  .toggle input{display:none}
+  .toggle .tr{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:.2s}
+  .toggle .kn{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .toggle input:checked + .tr{background:var(--accent)}
+  .toggle input:checked + .tr + .kn{transform:translateX(20px)}
+  .empty{text-align:center;color:var(--ink-soft);padding:40px 10px}
+  .empty .big{font-size:46px;margin-bottom:8px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
+    padding:11px 18px;border-radius:99px;font-size:14px;font-weight:600;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .seg{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:5px}
+  .seg button{flex:1;border:none;background:transparent;color:var(--ink-soft);font-weight:600;font-size:13px;padding:9px;border-radius:8px;cursor:pointer}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .result-score{text-align:center;padding:18px 0 6px}
+  .result-score .big{font-size:54px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .result-score .sub{color:var(--ink-soft);margin-top:4px}
+  .ring{width:132px;height:132px;margin:0 auto 6px;display:block}
+  .wrong-item{padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .wrong-item:last-child{border-bottom:none}
+  .wrong-item .q{font-weight:600;margin-bottom:3px}
+  .wrong-item .a{color:var(--ok);font-size:13px}
+  a.link{color:var(--accent);font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="brand"><span class="dot"></span>Banco de Questões</span>
+  <span class="spacer"></span>
+  <button class="iconbtn" id="navStats" title="Estatísticas">📊</button>
+  <button class="iconbtn" id="navSettings" title="Ajustes">⚙️</button>
+</div>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="home" class="view active">
+    <span class="eyebrow">Estudo</span>
+    <h1>Bom estudo.</h1>
+    <p class="lead" id="homeLead">Carregue suas questões e comece a praticar.</p>
+
+    <div class="stats-row">
+      <div class="stat"><div class="num due" id="sDue">0</div><div class="lab">Para hoje</div></div>
+      <div class="stat"><div class="num" id="sTotal">0</div><div class="lab">Questões</div></div>
+      <div class="stat"><div class="num" id="sAcc">—</div><div class="lab">Acurácia</div></div>
+    </div>
+
+    <div class="modes" id="modes">
+      <button class="mode" data-mode="revisao">
+        <span class="ic">🎯</span>
+        <span><span class="tt">Revisão inteligente</span><span class="ss">Repetição espaçada do que vence hoje</span></span>
+        <span class="ct" id="ctRevisao">0</span>
+      </button>
+      <button class="mode" data-mode="erradas">
+        <span class="ic">↺</span>
+        <span><span class="tt">Só as que errei</span><span class="ss">Refaz o que ainda não fixou</span></span>
+        <span class="ct" id="ctErradas">0</span>
+      </button>
+      <button class="mode" data-mode="todas">
+        <span class="ic">≡</span>
+        <span><span class="tt">Todas as questões</span><span class="ss">Banco completo, embaralhado</span></span>
+        <span class="ct" id="ctTodas">0</span>
+      </button>
+      <button class="mode" data-mode="simulado">
+        <span class="ic">⏱</span>
+        <span><span class="tt">Simulado</span><span class="ss">Seleção aleatória com placar final</span></span>
+        <span class="ct" id="ctSim">0</span>
+      </button>
+    </div>
+
+    <button class="btn ghost" id="goImport">＋ Adicionar questões (CSV)</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="view">
+    <div class="qhead">
+      <button class="iconbtn" id="quizBack">←</button>
+      <div class="progressbar"><i id="prog"></i></div>
+      <span class="qcount" id="qcount">0/0</span>
+    </div>
+    <div class="qmeta" id="qmeta"></div>
+    <div class="enun" id="enun"></div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback">
+      <div class="verdict" id="verdict"></div>
+      <div class="exp" id="exp"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="view">
+    <span class="eyebrow">Sessão concluída</span>
+    <div class="card">
+      <div class="result-score">
+        <svg class="ring" id="ring" viewBox="0 0 120 120"></svg>
+        <div class="sub" id="resSub"></div>
+      </div>
+    </div>
+    <div class="card" id="resWrongCard">
+      <h2>Para revisar</h2>
+      <div id="resWrong"></div>
+    </div>
+    <button class="btn" id="resHome">Voltar ao início</button>
+  </section>
+
+  <!-- IMPORT -->
+  <section id="import" class="view">
+    <span class="eyebrow">Importar</span>
+    <h1>Adicionar questões</h1>
+    <p class="lead">Envie um arquivo CSV ou cole o conteúdo abaixo.</p>
+
+    <div class="drop" id="drop">
+      <div style="font-size:30px;margin-bottom:6px">📄</div>
+      <div><strong>Toque para escolher</strong> ou arraste um arquivo .csv</div>
+    </div>
+    <input type="file" id="file" accept=".csv,text/csv" hidden>
+
+    <label class="field">ou cole o CSV aqui</label>
+    <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,tema,dificuldade,explicacao&#10;Quanto é 2+2?,3,4,5,6,b,Matemática,fácil,Soma simples."></textarea>
+    <div style="height:10px"></div>
+    <button class="btn" id="doImport">Importar</button>
+
+    <div class="hint">
+      <strong>Formato esperado</strong><br>
+      Primeira linha é o cabeçalho. Colunas: <code>enunciado</code>, <code>a</code> a <code>e</code> (alternativas),
+      <code>correta</code> (letra da resposta), <code>tema</code>, <code>dificuldade</code>, <code>explicacao</code>.
+      As três últimas e as alternativas <code>c</code>, <code>d</code>, <code>e</code> são opcionais.
+      Separador <code>,</code> ou <code>;</code> é detectado automaticamente.
+      <div style="margin-top:8px"><a class="link" id="dlSample">Baixar CSV de exemplo</a></div>
+    </div>
+    <button class="btn ghost" id="impBack">Voltar</button>
+  </section>
+
+  <!-- STATS -->
+  <section id="stats" class="view">
+    <span class="eyebrow">Desempenho</span>
+    <h1>Estatísticas</h1>
+    <div class="stats-row">
+      <div class="stat"><div class="num" id="stRespondidas">0</div><div class="lab">Respostas</div></div>
+      <div class="stat"><div class="num" id="stAcc">—</div><div class="lab">Acurácia</div></div>
+      <div class="stat"><div class="num" id="stDominadas">0</div><div class="lab">Dominadas</div></div>
+    </div>
+    <div class="card">
+      <h2>Acurácia por tema</h2>
+      <div id="temaList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
+    </div>
+    <button class="btn ghost" id="stBack">Voltar</button>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings" class="view">
+    <span class="eyebrow">Ajustes</span>
+    <h1>Ajustes</h1>
+    <div class="card">
+      <div class="switch">
+        <div><div class="lab">Embaralhar alternativas</div><div class="sub">Evita decorar a posição</div></div>
+        <label class="toggle"><input type="checkbox" id="optShuffle"><span class="tr"></span><span class="kn"></span></label>
+      </div>
+      <div class="switch">
+        <div><div class="lab">Embaralhar questões</div><div class="sub">Ordem aleatória nas sessões</div></div>
+        <label class="toggle"><input type="checkbox" id="optShuffleQ"><span class="tr"></span><span class="kn"></span></label>
+      </div>
+      <label class="field">Questões por simulado</label>
+      <div class="seg" id="simSize">
+        <button data-n="10">10</button><button data-n="20">20</button><button data-n="30">30</button><button data-n="0">Todas</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="lead" style="margin-bottom:12px">Os dados ficam neste navegador. Exporte para guardar ou levar a outro aparelho.</p>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn ghost" id="expData">Exportar</button>
+        <button class="btn ghost" id="impData">Importar</button>
+      </div>
+      <input type="file" id="jsonFile" accept=".json,application/json" hidden>
+    </div>
+    <div class="card">
+      <h2>Zona de perigo</h2>
+      <p class="lead" style="margin-bottom:12px">Remove todas as questões e o progresso deste navegador.</p>
+      <button class="btn danger" id="clearAll">Apagar tudo</button>
+    </div>
+    <button class="btn ghost" id="setBack">Voltar</button>
+  </section>
+
+</div>
+
+<div class="dock" id="dock"><div class="inner"><button class="btn" id="dockBtn">Confirmar</button></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------- armazenamento seguro (localStorage com fallback em memória) ---------- */
+const Store = (() => {
+  let mem = {};
+  let ok = true;
+  try { const t="__t"; localStorage.setItem(t,t); localStorage.removeItem(t); } catch(e){ ok=false; }
+  return {
+    get(k){ try{ return ok ? localStorage.getItem(k) : (mem[k] ?? null); }catch(e){ return mem[k] ?? null; } },
+    set(k,v){ try{ ok ? localStorage.setItem(k,v) : (mem[k]=v); }catch(e){ mem[k]=v; } },
+  };
+})();
+
+const KEY = "bq_state_v1";
+const INTERVALS = {1:1, 2:3, 3:7, 4:16, 5:35}; // dias por caixa
+
+const defaultState = () => ({
+  v:1, questions:[], history:[],
+  settings:{ shuffleOpts:true, shuffleQ:true, simSize:10 }
+});
+
+let S = load();
+function load(){
+  try{ const raw = Store.get(KEY); if(raw){ const s = JSON.parse(raw); s.settings = Object.assign(defaultState().settings, s.settings||{}); return s; } }catch(e){}
+  return defaultState();
+}
+function save(){ Store.set(KEY, JSON.stringify(S)); }
+
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const now = () => Date.now();
+const addDays = (ts,d) => ts + d*86400000;
+function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [x[i],x[j]]=[x[j],x[i]]; } return x; }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function norm(s){ return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+
+/* ---------- CSV ---------- */
+function detectDelim(text){
+  const head = text.split(/\r?\n/)[0] || "";
+  const counts = { ",":0, ";":0, "\t":0 };
+  let q=false;
+  for(const ch of head){ if(ch==='"'){q=!q;continue;} if(!q && counts[ch]!==undefined) counts[ch]++; }
+  let best=",",max=-1; for(const d in counts){ if(counts[d]>max){max=counts[d];best=d;} }
+  return best;
+}
+function parseCSV(text, delim){
+  text = text.replace(/^\uFEFF/, "");
+  const rows=[]; let row=[], field="", q=false, i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i+=2; continue; } q=false; i++; continue; }
+      field+=c; i++; continue;
+    }
+    if(c==='"'){ q=true; i++; continue; }
+    if(c===delim){ row.push(field); field=""; i++; continue; }
+    if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=""; i++; continue; }
+    if(c==='\r'){ i++; continue; }
+    field+=c; i++;
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim()!==""));
+}
+function mapHeader(h){
+  const n = norm(h);
+  if(["enunciado","pergunta","questao","question","texto"].includes(n)) return "enunciado";
+  if(["correta","resposta","gabarito","resposta correta","resposta_correta"].includes(n)) return "correta";
+  if(["tema","assunto","categoria","topico","materia","disciplina"].includes(n)) return "tema";
+  if(["dificuldade","nivel"].includes(n)) return "dificuldade";
+  if(["explicacao","justificativa","comentario","gabarito comentado"].includes(n)) return "explicacao";
+  let m = n.match(/^(?:alternativa[ _]?)?([a-e])$/); if(m) return "opt_"+m[1];
+  return null;
+}
+function importCSV(text){
+  if(!text.trim()){ toast("Cole ou selecione um CSV."); return; }
+  const delim = detectDelim(text);
+  const rows = parseCSV(text, delim);
+  if(rows.length < 2){ toast("CSV sem linhas de questões."); return; }
+  const header = rows[0].map(mapHeader);
+  if(!header.includes("enunciado")){ toast("Não encontrei a coluna 'enunciado'."); return; }
+
+  const existing = new Set(S.questions.map(q => norm(q.enunciado)));
+  let added=0, skipped=0;
+  for(let r=1;r<rows.length;r++){
+    const obj={}; rows[r].forEach((val,c)=>{ if(header[c]) obj[header[c]] = String(val).trim(); });
+    const enun = obj.enunciado; if(!enun) continue;
+    if(existing.has(norm(enun))){ skipped++; continue; }
+
+    const opcoes=[];
+    for(const L of ["a","b","c","d","e"]){ const t=obj["opt_"+L]; if(t) opcoes.push({k:L, t}); }
+    if(opcoes.length < 2){ skipped++; continue; }
+
+    let correta = norm(obj.correta);
+    if(!(correta.length===1 && "abcde".includes(correta))){
+      const hit = opcoes.find(o => norm(o.t)===correta);
+      correta = hit ? hit.k : (correta[0] && "abcde".includes(correta[0]) ? correta[0] : opcoes[0].k);
+    }
+    if(!opcoes.some(o=>o.k===correta)) correta = opcoes[0].k;
+
+    S.questions.push({
+      id: now().toString(36)+Math.random().toString(36).slice(2,7),
+      enunciado:enun, opcoes, correta,
+      tema: obj.tema||"", dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||"",
+      box:1, due:now(), acertos:0, erros:0, vistas:0, ultima:null
+    });
+    existing.add(norm(enun)); added++;
+  }
+  save();
+  toast(`${added} adicionada(s)${skipped?`, ${skipped} ignorada(s)`:""}.`);
+  renderHome(); show("home");
+}
+
+/* ---------- repetição espaçada ---------- */
+function gradeQuestion(q, ok){
+  q.vistas++;
+  q.ultima = ok;
+  S.history.push({qid:q.id, ok, t:now()});
+  if(ok){ q.acertos++; q.box=Math.min(5,q.box+1); q.due=addDays(now(), INTERVALS[q.box]); }
+  else { q.erros++; q.box=1; q.due=now(); }
+  save();
+}
+
+/* ---------- contagens / filtros ---------- */
+const isDue = q => q.due <= now();
+const countDue = () => S.questions.filter(isDue).length;
+const countErr = () => S.questions.filter(q => q.ultima===false).length;
+const countMastered = () => S.questions.filter(q => q.box>=5).length;
+
+/* ---------- navegação ---------- */
+function show(id){ $$(".view").forEach(v=>v.classList.toggle("active", v.id===id)); window.scrollTo(0,0); if(id!=="quiz") hideDock(); }
+
+/* ---------- home ---------- */
+function renderHome(){
+  const total = S.questions.length;
+  $("#sTotal").textContent = total;
+  $("#sDue").textContent = countDue();
+  const tot = S.history.length, ac = S.history.filter(h=>h.ok).length;
+  $("#sAcc").textContent = tot ? Math.round(ac/tot*100)+"%" : "—";
+  $("#ctRevisao").textContent = countDue();
+  $("#ctErradas").textContent = countErr();
+  $("#ctTodas").textContent = total;
+  $("#ctSim").textContent = S.settings.simSize ? Math.min(S.settings.simSize,total) : total;
+  $("#homeLead").textContent = total ? "Escolha um modo e mande ver." : "Carregue suas questões e comece a praticar.";
+  $$("#modes .mode").forEach(b=>{
+    const m=b.dataset.mode;
+    let n = m==="revisao"?countDue() : m==="erradas"?countErr() : total;
+    b.disabled = n===0;
+  });
+}
+
+/* ---------- sessão de quiz ---------- */
+let sess = null;
+function buildQueue(mode){
+  let list;
+  if(mode==="revisao") list = S.questions.filter(isDue).sort((a,b)=>a.due-b.due);
+  else if(mode==="erradas") list = S.questions.filter(q=>q.ultima===false);
+  else if(mode==="simulado"){ const n=S.settings.simSize; list = shuffle(S.questions); if(n) list=list.slice(0,n); }
+  else list = S.questions.slice();
+  if(mode!=="revisao" && S.settings.shuffleQ) list = shuffle(list);
+  return list;
+}
+function startSession(mode){
+  const q = buildQueue(mode);
+  if(!q.length){ toast("Nada para estudar neste modo."); return; }
+  sess = { mode, queue:q, i:0, right:0, wrong:[], answered:false };
+  show("quiz"); renderQ();
+}
+function renderQ(){
+  const q = sess.queue[sess.i];
+  sess.answered=false; sess.picked=null;
+  $("#prog").style.width = (sess.i/sess.queue.length*100)+"%";
+  $("#qcount").textContent = `${sess.i+1}/${sess.queue.length}`;
+  const meta=[];
+  if(q.tema) meta.push(`<span class="tag">${esc(q.tema)}</span>`);
+  if(q.dificuldade) meta.push(`<span class="tag">${esc(q.dificuldade)}</span>`);
+  meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
+  $("#qmeta").innerHTML = meta.join("");
+  $("#enun").textContent = q.enunciado;
+  const disp = S.settings.shuffleOpts ? shuffle(q.opcoes) : q.opcoes;
+  sess.disp = disp;
+  $("#opts").innerHTML = disp.map((o,idx)=>`
+    <button class="opt" data-k="${o.k}">
+      <span class="k">${String.fromCharCode(65+idx)}</span>
+      <span class="tx">${esc(o.t)}</span>
+    </button>`).join("");
+  $$("#opts .opt").forEach(el => el.addEventListener("click", ()=>pick(el)));
+  const fb=$("#feedback"); fb.className="feedback"; $("#exp").textContent="";
+  setDock("Confirmar", true); showDock();
+}
+function pick(el){
+  if(sess.answered) return;
+  $$("#opts .opt").forEach(o=>o.classList.remove("sel"));
+  el.classList.add("sel"); sess.picked = el.dataset.k;
+  setDock("Confirmar", false);
+}
+function confirmAnswer(){
+  if(sess.answered){ next(); return; }
+  if(!sess.picked){ toast("Selecione uma alternativa."); return; }
+  sess.answered=true;
+  const q = sess.queue[sess.i];
+  const ok = sess.picked === q.correta;
+  if(ok) sess.right++; else sess.wrong.push(q);
+  gradeQuestion(q, ok);
+  $$("#opts .opt").forEach(el=>{
+    el.classList.add("locked");
+    if(el.dataset.k===q.correta) el.classList.add("correct");
+    else if(el.dataset.k===sess.picked) el.classList.add("wrong");
+  });
+  const fb=$("#feedback"); fb.classList.add("show", ok?"ok":"no");
+  $("#verdict").innerHTML = ok ? "✓ Acertou" : "✕ Errou";
+  $("#exp").textContent = q.explicacao || (ok ? "" : "Resposta correta destacada acima.");
+  setDock(sess.i+1<sess.queue.length ? "Próxima" : "Ver resultado", false);
+}
+function next(){
+  sess.i++;
+  if(sess.i>=sess.queue.length){ $("#prog").style.width="100%"; finish(); return; }
+  renderQ();
+}
+function finish(){
+  const total=sess.queue.length, right=sess.right, pct=Math.round(right/total*100);
+  drawRing(pct);
+  $("#resSub").textContent = `${right} de ${total} corretas`;
+  const wc=$("#resWrongCard");
+  if(sess.wrong.length){
+    wc.style.display="";
+    $("#resWrong").innerHTML = sess.wrong.map(q=>{
+      const cor = q.opcoes.find(o=>o.k===q.correta);
+      return `<div class="wrong-item"><div class="q">${esc(q.enunciado)}</div><div class="a">✓ ${esc(cor?cor.t:"")}</div></div>`;
+    }).join("");
+  } else { wc.style.display="none"; }
+  show("result");
+}
+function drawRing(pct){
+  const r=52, c=2*Math.PI*r, off=c*(1-pct/100);
+  const col = pct>=70?"var(--ok)":pct>=40?"var(--accent)":"var(--err)";
+  $("#ring").innerHTML = `
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--line)" stroke-width="11"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 60 60)"/>
+    <text x="60" y="60" text-anchor="middle" dominant-baseline="central" font-size="30" font-weight="800" fill="var(--ink)">${pct}%</text>`;
+}
+
+/* ---------- dock ---------- */
+function showDock(){ $("#dock").classList.add("show"); }
+function hideDock(){ $("#dock").classList.remove("show"); }
+function setDock(label, disabled){ const b=$("#dockBtn"); b.textContent=label; b.disabled=!!disabled; }
+
+/* ---------- estatísticas ---------- */
+function renderStats(){
+  const tot=S.history.length, ac=S.history.filter(h=>h.ok).length;
+  $("#stRespondidas").textContent = tot;
+  $("#stAcc").textContent = tot ? Math.round(ac/tot*100)+"%" : "—";
+  $("#stDominadas").textContent = countMastered();
+  const byTema={};
+  for(const q of S.questions){
+    const tema = q.tema || "Sem tema";
+    const a=q.acertos, e=q.erros;
+    if(a+e===0) continue;
+    (byTema[tema] ||= {a:0,e:0}); byTema[tema].a+=a; byTema[tema].e+=e;
+  }
+  const keys=Object.keys(byTema).sort((x,y)=>{
+    const px=byTema[x].a/(byTema[x].a+byTema[x].e), py=byTema[y].a/(byTema[y].a+byTema[y].e); return py-px;
+  });
+  const box=$("#temaList");
+  if(!keys.length){ box.innerHTML='<div class="empty"><div class="big">📊</div>Responda algumas questões para ver os dados.</div>'; return; }
+  box.innerHTML = keys.map(k=>{
+    const o=byTema[k], p=Math.round(o.a/(o.a+o.e)*100);
+    return `<div class="tema-row"><span class="nm">${esc(k)}</span>
+      <span class="minibar"><i style="width:${p}%"></i></span>
+      <span class="pct">${p}%</span></div>`;
+  }).join("");
+}
+
+/* ---------- ajustes ---------- */
+function renderSettings(){
+  $("#optShuffle").checked = S.settings.shuffleOpts;
+  $("#optShuffleQ").checked = S.settings.shuffleQ;
+  $$("#simSize button").forEach(b=>b.classList.toggle("on", Number(b.dataset.n)===S.settings.simSize));
+}
+
+/* ---------- exportar / importar dados ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`questoes-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(a.href); toast("Backup exportado.");
+}
+function importDataFile(file){
+  const fr=new FileReader();
+  fr.onload=()=>{ try{ const s=JSON.parse(fr.result); if(!s.questions) throw 0;
+    s.settings=Object.assign(defaultState().settings,s.settings||{}); S=s; save();
+    renderHome(); toast("Backup importado."); show("home");
+  }catch(e){ toast("Arquivo inválido."); } };
+  fr.readAsText(file);
+}
+
+/* ---------- CSV de exemplo ---------- */
+const SAMPLE = `enunciado,a,b,c,d,correta,tema,dificuldade,explicacao
+"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
+"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,fácil,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
+"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,médio,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
+"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,médio,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
+"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,fácil,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."`;
+
+function downloadSample(){
+  const blob=new Blob([SAMPLE],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="exemplo-questoes.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------- eventos ---------- */
+$$("#modes .mode").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled) startSession(b.dataset.mode); }));
+$("#goImport").addEventListener("click", ()=>show("import"));
+$("#navStats").addEventListener("click", ()=>{ renderStats(); show("stats"); });
+$("#navSettings").addEventListener("click", ()=>{ renderSettings(); show("settings"); });
+$("#quizBack").addEventListener("click", ()=>{ if(confirm("Sair da sessão? O progresso já respondido fica salvo.")){ renderHome(); show("home"); } });
+$("#dockBtn").addEventListener("click", confirmAnswer);
+$("#resHome").addEventListener("click", ()=>{ renderHome(); show("home"); });
+$("#stBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
+$("#setBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
+$("#impBack").addEventListener("click", ()=>show("home"));
+
+$("#drop").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", e=>{ const f=e.target.files[0]; if(f){ const fr=new FileReader(); fr.onload=()=>{ $("#paste").value=fr.result; toast("Arquivo carregado. Toque em Importar."); }; fr.readAsText(f); } });
+["dragover","dragenter"].forEach(ev=>$("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.add("over"); }));
+["dragleave","drop"].forEach(ev=>$("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.remove("over"); }));
+$("#drop").addEventListener("drop", e=>{ const f=e.dataTransfer.files[0]; if(f){ const fr=new FileReader(); fr.onload=()=>{ $("#paste").value=fr.result; toast("Arquivo carregado. Toque em Importar."); }; fr.readAsText(f); } });
+$("#doImport").addEventListener("click", ()=>importCSV($("#paste").value));
+$("#dlSample").addEventListener("click", e=>{ e.preventDefault(); downloadSample(); });
+
+$("#optShuffle").addEventListener("change", e=>{ S.settings.shuffleOpts=e.target.checked; save(); });
+$("#optShuffleQ").addEventListener("change", e=>{ S.settings.shuffleQ=e.target.checked; save(); });
+$$("#simSize button").forEach(b=> b.addEventListener("click", ()=>{ S.settings.simSize=Number(b.dataset.n); save(); renderSettings(); renderHome(); }));
+$("#expData").addEventListener("click", exportData);
+$("#impData").addEventListener("click", ()=>$("#jsonFile").click());
+$("#jsonFile").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) importDataFile(f); });
+$("#clearAll").addEventListener("click", ()=>{ if(confirm("Apagar TODAS as questões e o progresso? Isso não pode ser desfeito.")){ S=defaultState(); save(); renderHome(); toast("Tudo apagado."); show("home"); } });
+
+/* ---------- init ---------- */
+renderHome();
+</script>
+</body>
+</html>
