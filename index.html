@@ -45,7 +45,7 @@
     backdrop-filter:saturate(160%) blur(10px);border-bottom:1px solid var(--line);
     padding:max(10px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;
   }
-  .bar .brand{font-weight:700;font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .bar .brand{font-weight:700;font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;cursor:pointer}
   .bar .dot{width:10px;height:10px;border-radius:3px;background:var(--accent);transform:rotate(12deg)}
   .bar .spacer{flex:1}
   .iconbtn{
@@ -67,6 +67,12 @@
   .stat .num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1}
   .stat .lab{font:600 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
   .stat .num.due{color:var(--accent)}
+  /* tema chips */
+  .temas{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px 6px;padding:2px 16px 14px;scrollbar-width:none}
+  .temas::-webkit-scrollbar{display:none}
+  .chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-weight:600;font-size:13px;padding:8px 14px;border-radius:99px;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip:active{transform:scale(.97)}
   /* mode buttons */
   .modes{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
   .mode{
@@ -150,11 +156,23 @@
   .toggle .kn{position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
   .toggle input:checked + .tr{background:var(--accent)}
   .toggle input:checked + .tr + .kn{transform:translateX(20px)}
+  .intervals{display:flex;flex-direction:column;gap:8px}
+  .iv{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .iv span{font-weight:600;font-size:14.5px}
+  .iv .unit{color:var(--ink-soft);font-size:13px;margin-left:4px}
+  .iv input{width:84px;text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--mono);font-size:15px;background:var(--surface);color:var(--ink)}
+  .iv input:focus{outline:none;border-color:var(--accent)}
   .empty{text-align:center;color:var(--ink-soft);padding:40px 10px}
   .empty .big{font-size:46px;margin-bottom:8px}
   .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
     padding:11px 18px;border-radius:99px;font-size:14px;font-weight:600;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:24px}
+  .modal.show{display:flex;animation:fade .15s ease}
+  .modal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;max-width:380px;width:100%}
+  .modal-msg{font-size:15.5px;font-weight:600;line-height:1.45;margin-bottom:18px}
+  .modal-actions{display:flex;gap:10px}
+  .modal-actions .btn{flex:1}
   .seg{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:5px}
   .seg button{flex:1;border:none;background:transparent;color:var(--ink-soft);font-weight:600;font-size:13px;padding:9px;border-radius:8px;cursor:pointer}
   .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
@@ -172,7 +190,7 @@
 <body>
 
 <div class="bar">
-  <span class="brand"><span class="dot"></span>Banco de Questões</span>
+  <span class="brand" id="brand"><span class="dot"></span>Banco de Questões</span>
   <span class="spacer"></span>
   <button class="iconbtn" id="navStats" title="Estatísticas">📊</button>
   <button class="iconbtn" id="navSettings" title="Ajustes">⚙️</button>
@@ -185,6 +203,8 @@
     <span class="eyebrow">Estudo</span>
     <h1>Bom estudo.</h1>
     <p class="lead" id="homeLead">Carregue suas questões e comece a praticar.</p>
+
+    <div class="temas" id="temas"></div>
 
     <div class="stats-row">
       <div class="stat"><div class="num due" id="sDue">0</div><div class="lab">Para hoje</div></div>
@@ -263,15 +283,15 @@
     <input type="file" id="file" accept=".csv,text/csv" hidden>
 
     <label class="field">ou cole o CSV aqui</label>
-    <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,tema,dificuldade,explicacao&#10;Quanto é 2+2?,3,4,5,6,b,Matemática,fácil,Soma simples."></textarea>
+    <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,tema,explicacao&#10;Quanto é 2+2?,3,4,5,6,b,Matemática,Soma simples."></textarea>
     <div style="height:10px"></div>
     <button class="btn" id="doImport">Importar</button>
 
     <div class="hint">
       <strong>Formato esperado</strong><br>
       Primeira linha é o cabeçalho. Colunas: <code>enunciado</code>, <code>a</code> a <code>e</code> (alternativas),
-      <code>correta</code> (letra da resposta), <code>tema</code>, <code>dificuldade</code>, <code>explicacao</code>.
-      As três últimas e as alternativas <code>c</code>, <code>d</code>, <code>e</code> são opcionais.
+      <code>correta</code> (letra da resposta), <code>tema</code> e <code>explicacao</code>.
+      As duas últimas e as alternativas <code>c</code>, <code>d</code>, <code>e</code> são opcionais.
       Separador <code>,</code> ou <code>;</code> é detectado automaticamente.
       <div style="margin-top:8px"><a class="link" id="dlSample">Baixar CSV de exemplo</a></div>
     </div>
@@ -313,6 +333,20 @@
       </div>
     </div>
     <div class="card">
+      <h2>Revisão inteligente</h2>
+      <p class="lead" style="margin-bottom:10px">Usa um sistema de caixas (modelo de Leitner). Cada questão tem uma caixa de 1 a 5. Ao acertar, ela sobe de caixa e o reencontro é adiado; ao errar, volta para a caixa 1 e reaparece no mesmo dia. A sessão reúne o que já venceu, começando pelas mais atrasadas. Questões recém-importadas entram como vencidas e aparecem na primeira revisão.</p>
+      <label class="field">Dias até a próxima revisão, por caixa (após um acerto)</label>
+      <div class="intervals" id="intervals">
+        <div class="iv"><span>Caixa 1 <span class="unit">acertou 1x</span></span><input type="number" min="0" inputmode="numeric" data-box="1"></div>
+        <div class="iv"><span>Caixa 2</span><input type="number" min="0" inputmode="numeric" data-box="2"></div>
+        <div class="iv"><span>Caixa 3</span><input type="number" min="0" inputmode="numeric" data-box="3"></div>
+        <div class="iv"><span>Caixa 4</span><input type="number" min="0" inputmode="numeric" data-box="4"></div>
+        <div class="iv"><span>Caixa 5 <span class="unit">dominada</span></span><input type="number" min="0" inputmode="numeric" data-box="5"></div>
+      </div>
+      <div style="height:12px"></div>
+      <button class="btn ghost" id="resetIv">Restaurar padrão (1, 3, 7, 16, 35)</button>
+    </div>
+    <div class="card">
       <h2>Backup</h2>
       <p class="lead" style="margin-bottom:12px">Os dados ficam neste navegador. Exporte para guardar ou levar a outro aparelho.</p>
       <div class="row" style="margin-bottom:10px">
@@ -333,6 +367,15 @@
 
 <div class="dock" id="dock"><div class="inner"><button class="btn" id="dockBtn">Confirmar</button></div></div>
 <div class="toast" id="toast"></div>
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="modalNo">Cancelar</button>
+      <button class="btn danger" id="modalYes">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -349,11 +392,11 @@ const Store = (() => {
 })();
 
 const KEY = "bq_state_v1";
-const INTERVALS = {1:1, 2:3, 3:7, 4:16, 5:35}; // dias por caixa
+const DEFAULT_INTERVALS = [1, 3, 7, 16, 35]; // dias por caixa (1..5), customizável em Ajustes
 
 const defaultState = () => ({
   v:1, questions:[], history:[],
-  settings:{ shuffleOpts:true, shuffleQ:true, simSize:10 }
+  settings:{ shuffleOpts:true, shuffleQ:true, simSize:10, tema:"", intervals:DEFAULT_INTERVALS.slice() }
 });
 
 let S = load();
@@ -371,6 +414,16 @@ const now = () => Date.now();
 const addDays = (ts,d) => ts + d*86400000;
 function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [x[i],x[j]]=[x[j],x[i]]; } return x; }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function showConfirm(msg, yesLabel, onYes){
+  $("#modalMsg").textContent = msg;
+  $("#modalYes").textContent = yesLabel || "Confirmar";
+  const m=$("#modal"), yes=$("#modalYes"), no=$("#modalNo");
+  const close=()=>{ m.classList.remove("show"); yes.onclick=null; no.onclick=null; m.onclick=null; };
+  yes.onclick=()=>{ close(); onYes(); };
+  no.onclick=close;
+  m.onclick=e=>{ if(e.target===m) close(); };
+  m.classList.add("show");
+}
 function norm(s){ return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
 
 /* ---------- CSV ---------- */
@@ -450,39 +503,60 @@ function importCSV(text){
 }
 
 /* ---------- repetição espaçada ---------- */
+function ivDays(box){ const a=S.settings.intervals||DEFAULT_INTERVALS; const v=a[box-1]; return (typeof v==="number" && v>=0) ? v : DEFAULT_INTERVALS[box-1]; }
 function gradeQuestion(q, ok){
   q.vistas++;
   q.ultima = ok;
   S.history.push({qid:q.id, ok, t:now()});
-  if(ok){ q.acertos++; q.box=Math.min(5,q.box+1); q.due=addDays(now(), INTERVALS[q.box]); }
+  if(ok){ q.acertos++; q.box=Math.min(5,q.box+1); q.due=addDays(now(), ivDays(q.box)); }
   else { q.erros++; q.box=1; q.due=now(); }
   save();
 }
 
 /* ---------- contagens / filtros ---------- */
 const isDue = q => q.due <= now();
-const countDue = () => S.questions.filter(isDue).length;
-const countErr = () => S.questions.filter(q => q.ultima===false).length;
 const countMastered = () => S.questions.filter(q => q.box>=5).length;
+const temaOf = q => q.tema || "Sem tema";
+function pool(){ const t=S.settings.tema; return t ? S.questions.filter(q=>temaOf(q)===t) : S.questions.slice(); }
 
 /* ---------- navegação ---------- */
 function show(id){ $$(".view").forEach(v=>v.classList.toggle("active", v.id===id)); window.scrollTo(0,0); if(id!=="quiz") hideDock(); }
 
 /* ---------- home ---------- */
+function renderTemas(){
+  const wrap = $("#temas");
+  const set=[], seen=new Set();
+  for(const q of S.questions){ const t=temaOf(q); if(!seen.has(t)){ seen.add(t); set.push(t); } }
+  if(S.settings.tema && !seen.has(S.settings.tema)){ S.settings.tema=""; save(); }
+  if(set.length<=1){ wrap.innerHTML=""; wrap.style.display="none"; return; }
+  wrap.style.display="";
+  set.sort((a,b)=>a.localeCompare(b,"pt"));
+  const cur = S.settings.tema || "";
+  const chips = [`<button class="chip${cur===""?" on":""}" data-t="">Todos</button>`]
+    .concat(set.map(t=>`<button class="chip${cur===t?" on":""}" data-t="${esc(t)}">${esc(t)}</button>`));
+  wrap.innerHTML = chips.join("");
+  $$("#temas .chip").forEach(c=> c.addEventListener("click", ()=>{ S.settings.tema=c.dataset.t; save(); renderHome(); }));
+}
 function renderHome(){
-  const total = S.questions.length;
+  renderTemas();
+  const base = pool();
+  const total = base.length;
+  const ids = new Set(base.map(q=>q.id));
+  const hist = S.settings.tema ? S.history.filter(h=>ids.has(h.qid)) : S.history;
+  const due = base.filter(isDue).length;
+  const err = base.filter(q=>q.ultima===false).length;
   $("#sTotal").textContent = total;
-  $("#sDue").textContent = countDue();
-  const tot = S.history.length, ac = S.history.filter(h=>h.ok).length;
-  $("#sAcc").textContent = tot ? Math.round(ac/tot*100)+"%" : "—";
-  $("#ctRevisao").textContent = countDue();
-  $("#ctErradas").textContent = countErr();
+  $("#sDue").textContent = due;
+  const ac = hist.filter(h=>h.ok).length;
+  $("#sAcc").textContent = hist.length ? Math.round(ac/hist.length*100)+"%" : "—";
+  $("#ctRevisao").textContent = due;
+  $("#ctErradas").textContent = err;
   $("#ctTodas").textContent = total;
   $("#ctSim").textContent = S.settings.simSize ? Math.min(S.settings.simSize,total) : total;
-  $("#homeLead").textContent = total ? "Escolha um modo e mande ver." : "Carregue suas questões e comece a praticar.";
+  $("#homeLead").textContent = S.questions.length ? "Escolha um modo e mande ver." : "Carregue suas questões e comece a praticar.";
   $$("#modes .mode").forEach(b=>{
     const m=b.dataset.mode;
-    let n = m==="revisao"?countDue() : m==="erradas"?countErr() : total;
+    const n = m==="revisao"?due : m==="erradas"?err : total;
     b.disabled = n===0;
   });
 }
@@ -490,11 +564,12 @@ function renderHome(){
 /* ---------- sessão de quiz ---------- */
 let sess = null;
 function buildQueue(mode){
+  const base = pool();
   let list;
-  if(mode==="revisao") list = S.questions.filter(isDue).sort((a,b)=>a.due-b.due);
-  else if(mode==="erradas") list = S.questions.filter(q=>q.ultima===false);
-  else if(mode==="simulado"){ const n=S.settings.simSize; list = shuffle(S.questions); if(n) list=list.slice(0,n); }
-  else list = S.questions.slice();
+  if(mode==="revisao") list = base.filter(isDue).sort((a,b)=>a.due-b.due);
+  else if(mode==="erradas") list = base.filter(q=>q.ultima===false);
+  else if(mode==="simulado"){ const n=S.settings.simSize; list = shuffle(base); if(n) list=list.slice(0,n); }
+  else list = base.slice();
   if(mode!=="revisao" && S.settings.shuffleQ) list = shuffle(list);
   return list;
 }
@@ -511,7 +586,6 @@ function renderQ(){
   $("#qcount").textContent = `${sess.i+1}/${sess.queue.length}`;
   const meta=[];
   if(q.tema) meta.push(`<span class="tag">${esc(q.tema)}</span>`);
-  if(q.dificuldade) meta.push(`<span class="tag">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
   $("#qmeta").innerHTML = meta.join("");
   $("#enun").textContent = q.enunciado;
@@ -615,6 +689,7 @@ function renderSettings(){
   $("#optShuffle").checked = S.settings.shuffleOpts;
   $("#optShuffleQ").checked = S.settings.shuffleQ;
   $$("#simSize button").forEach(b=>b.classList.toggle("on", Number(b.dataset.n)===S.settings.simSize));
+  $$("#intervals input").forEach(inp=>{ inp.value = ivDays(Number(inp.dataset.box)); });
 }
 
 /* ---------- exportar / importar dados ---------- */
@@ -634,12 +709,12 @@ function importDataFile(file){
 }
 
 /* ---------- CSV de exemplo ---------- */
-const SAMPLE = `enunciado,a,b,c,d,correta,tema,dificuldade,explicacao
-"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
-"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,fácil,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
-"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,médio,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
-"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,médio,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
-"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,fácil,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."`;
+const SAMPLE = `enunciado,a,b,c,d,correta,tema,explicacao
+"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
+"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
+"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
+"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
+"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."`;
 
 function downloadSample(){
   const blob=new Blob([SAMPLE],{type:"text/csv"});
@@ -652,7 +727,9 @@ $$("#modes .mode").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled)
 $("#goImport").addEventListener("click", ()=>show("import"));
 $("#navStats").addEventListener("click", ()=>{ renderStats(); show("stats"); });
 $("#navSettings").addEventListener("click", ()=>{ renderSettings(); show("settings"); });
-$("#quizBack").addEventListener("click", ()=>{ if(confirm("Sair da sessão? O progresso já respondido fica salvo.")){ renderHome(); show("home"); } });
+function goHome(){ renderHome(); show("home"); }
+$("#brand").addEventListener("click", goHome);
+$("#quizBack").addEventListener("click", goHome);
 $("#dockBtn").addEventListener("click", confirmAnswer);
 $("#resHome").addEventListener("click", ()=>{ renderHome(); show("home"); });
 $("#stBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
@@ -670,10 +747,16 @@ $("#dlSample").addEventListener("click", e=>{ e.preventDefault(); downloadSample
 $("#optShuffle").addEventListener("change", e=>{ S.settings.shuffleOpts=e.target.checked; save(); });
 $("#optShuffleQ").addEventListener("change", e=>{ S.settings.shuffleQ=e.target.checked; save(); });
 $$("#simSize button").forEach(b=> b.addEventListener("click", ()=>{ S.settings.simSize=Number(b.dataset.n); save(); renderSettings(); renderHome(); }));
+$$("#intervals input").forEach(inp=> inp.addEventListener("change", ()=>{
+  const b=Number(inp.dataset.box); let v=parseInt(inp.value,10);
+  if(isNaN(v)||v<0) v=DEFAULT_INTERVALS[b-1];
+  inp.value=v; (S.settings.intervals ||= DEFAULT_INTERVALS.slice())[b-1]=v; save();
+}));
+$("#resetIv").addEventListener("click", ()=>{ S.settings.intervals=DEFAULT_INTERVALS.slice(); save(); renderSettings(); toast("Intervalos restaurados."); });
 $("#expData").addEventListener("click", exportData);
 $("#impData").addEventListener("click", ()=>$("#jsonFile").click());
 $("#jsonFile").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) importDataFile(f); });
-$("#clearAll").addEventListener("click", ()=>{ if(confirm("Apagar TODAS as questões e o progresso? Isso não pode ser desfeito.")){ S=defaultState(); save(); renderHome(); toast("Tudo apagado."); show("home"); } });
+$("#clearAll").addEventListener("click", ()=> showConfirm("Apagar TODAS as questões e o progresso? Isso não pode ser desfeito.", "Apagar tudo", ()=>{ S=defaultState(); save(); renderHome(); renderSettings(); toast("Tudo apagado."); show("home"); }));
 
 /* ---------- init ---------- */
 renderHome();

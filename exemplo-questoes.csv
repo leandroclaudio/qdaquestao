@@ -1,6 +1,6 @@
-enunciado,a,b,c,d,correta,tema,dificuldade,explicacao
-"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
-"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,fácil,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
-"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,médio,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
-"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,médio,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
-"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,fácil,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."
+enunciado,a,b,c,d,correta,tema,explicacao
+"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
+"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
+"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
+"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
+"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."
