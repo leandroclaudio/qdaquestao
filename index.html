@@ -838,7 +838,7 @@
       <div class="wiki-pre">enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
 "O que a mediana representa?","A média","O valor central","A moda","A amplitude",b,Concurso ABDI,Estatística,multipla,Fácil,"Divide os dados ordenados ao meio."
 "A ___ é a lei brasileira (13.709/2018) de proteção de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,LGPD,lacuna,Fácil,"A LGPD regula o tratamento de dados no Brasil."
-"O contrato de gestão estipula ___ e ___ para avaliação de desempenho.",,,,,limites ;; critérios,Concurso ABDI,Gestão Pública,lacuna,Média,"Duas lacunas em ordem fixa separadas por ;;."
+"Quanto à despesa com remuneração dos empregados da ABDI, o contrato de gestão estipula ___ e ___.",,,,,limites ;; critérios,Concurso ABDI,Gestão Pública,lacuna,Média,"Duas lacunas em ordem fixa separadas por ;;."
 "São princípios expressos na administração pública: ___ e ___.",,,,,~ legalidade ;; impessoalidade,Concurso ABDI,Gestão Pública,lacuna,Média,"Com prefixo ~, o aluno pode preencher os termos em qualquer ordem."
 "Na LGPD, dados sensíveis dispensam base legal quando tratados pelo poder público.",,,,,Errado,Concurso ABDI,LGPD,ce,Média,"Errado. O poder público deve observar o art. 11 da LGPD."</div>
 
@@ -1537,6 +1537,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema, modeOverride){
     existingMap.set(`${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`, q);
   }
   const seenInFile = new Set();
+  const protectedKeys = new Set();
   const touchedNbKeys = new Set();
   const newItems = [];
   const updateItems = [];
@@ -1582,6 +1583,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema, modeOverride){
         tipo = "lacuna";
       } else {
         invalid++;
+        protectedKeys.add(dupKey);
         continue;
       }
     }
@@ -1594,17 +1596,18 @@ function analyzeCSV(text, fallbackProj, fallbackTema, modeOverride){
       finalCorreta = (normCor.startsWith("c") || normCor.startsWith("v")) ? "c" : "e";
     } else if(tipo === "lacuna"){
       const spec = parseLacunaSpec(rawCor);
-      if(!spec.lacunas.length){ invalid++; continue; }
+      if(!spec.lacunas.length){ invalid++; protectedKeys.add(dupKey); continue; }
       const nBlanks = countBlanks(enun);
-      if(nBlanks > 0 && nBlanks !== spec.lacunas.length){
+      if((nBlanks > 0 && nBlanks !== spec.lacunas.length) || (nBlanks === 0 && spec.lacunas.length > 1)){
         invalid++;
         inconsistentLines.push(r + 1);
+        protectedKeys.add(dupKey);
         continue;
       }
       finalOpcoes = [];
       finalCorreta = rawCor;
     } else {
-      if(opcoes.length < 2){ invalid++; continue; }
+      if(opcoes.length < 2){ invalid++; protectedKeys.add(dupKey); continue; }
       let c = normCor.replace(/^[(\[]*([a-e])[)\].]*$/, "$1");
       if(!(c.length===1 && "abcde".includes(c))){
         const hit = opcoes.find(o => norm(o.t)===normCor);
@@ -1650,7 +1653,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema, modeOverride){
     for(const q of S.questions){
       const nbKey = `${norm(projOf(q))}:::${norm(temaOf(q))}`;
       const dupKey = `${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`;
-      if(touchedNbKeys.has(nbKey) && !seenInFile.has(dupKey)){
+      if(touchedNbKeys.has(nbKey) && !seenInFile.has(dupKey) && !protectedKeys.has(dupKey)){
         removeItems.push(q);
       }
     }
@@ -1774,8 +1777,11 @@ function importCSV(text, fallbackProj, fallbackTema, modeOverride){
   }
 
   if(res.mode === "replace"){
+    const invWarn = res.invalid
+      ? ` Atenção: ${res.invalid} linha(s) inválida(s)/inconsistente(s) foram ignoradas e suas versões atuais foram mantidas.`
+      : "";
     showConfirm(
-      `Substituir caderno: ${res.removeItems.length} questão(ões) ausente(s) do CSV serão removidas, ${res.updateItems.length} atualizada(s) e ${res.newItems.length} adicionada(s). Deseja continuar?`,
+      `Substituir caderno: ${res.removeItems.length} questão(ões) ausente(s) do CSV serão removidas, ${res.updateItems.length} atualizada(s) e ${res.newItems.length} adicionada(s).${invWarn} Deseja continuar?`,
       "Substituir",
       () => executeCSVImportResult(res)
     );
@@ -2337,21 +2343,13 @@ function normLacunaToken(s){
     .trim();
 }
 
-function formatEnunciadoHtml(text, isLacuna, spec){
+function formatEnunciadoHtml(text, isLacuna){
   const escaped = esc(text);
   if(!isLacuna) return escaped;
-  const parsed = spec || parseLacunaSpec("");
-  const allLens = parsed.lacunas.flat().map(v => v.length);
-  const globalMax = allLens.length ? Math.max(...allLens) : 12;
   let idx = 0;
   return escaped.replace(/(_{3,}|\[\.\.\.\])/g, () => {
     const i = idx++;
-    let maxLen = globalMax;
-    if(!parsed.ordemLivre && parsed.lacunas[i] && parsed.lacunas[i].length){
-      maxLen = Math.max(...parsed.lacunas[i].map(v => v.length));
-    }
-    const w = Math.min(28, Math.max(8, maxLen + 2));
-    return `<input type="text" class="lacuna-inline" data-idx="${i}" style="width:${w}ch" autocomplete="off">`;
+    return `<input type="text" class="lacuna-inline" data-idx="${i}" style="width:14ch" autocomplete="off">`;
   });
 }
 
@@ -3248,7 +3246,7 @@ const SAMPLE = `enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicac
 "O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Concurso ABDI,Estatística,multipla,Fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
 "Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Concurso ABDI,Estatística,multipla,Média,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
 "A ___ (sigla) é a lei brasileira (Lei nº 13.709/2018) que regula a proteção e o tratamento de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Fácil,"A LGPD entrou em vigor em 2020 e aplica-se a pessoas físicas e jurídicas, de direito público ou privado."
-"O contrato de gestão celebrado com a ABDI estipula ___ e ___ para avaliação de desempenho.",,,,,limites ;; critérios,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Média,"Exemplo de questão com duas lacunas em ordem fixa separadas por ;;."
+"Quanto à despesa com remuneração dos empregados da ABDI, o contrato de gestão estipula ___ e ___.",,,,,limites ;; critérios,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Média,"Exemplo de questão com duas lacunas em ordem fixa separadas por ;;."
 "Entre os princípios expressos da administração pública no art. 37 da Constituição, destacam-se ___ e ___.",,,,,~ publicidade ;; eficiência | eficiencia,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Média,"Exemplo de questão em ordem livre (prefixo ~): os termos podem ser preenchidos em qualquer ordem."
 "Segundo a LGPD, o tratamento de dados pessoais sensíveis dispensa qualquer hipótese legal quando realizado pelo poder público.",,,,,Errado,Concurso ABDI,Políticas Públicas e LGPD,ce,Média,"Errado. O poder público também deve observar as bases legais restritas do art. 11 da LGPD para tratar dados sensíveis."
 "O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Concurso ABDI,Economia e Indicadores,multipla,Média,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para medir desigualdade de renda."
