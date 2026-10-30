@@ -527,6 +527,11 @@
             <span><span class="tt">Todas do caderno</span><span class="ss">Pratica todas as questões deste caderno</span></span>
             <span class="ct" id="ctTodas">0</span>
           </button>
+          <button class="mode" data-mode="problematicas">
+            <span class="ic">⚠</span>
+            <span><span class="tt">Questões problemáticas</span><span class="ss">Questões com 4 ou mais erros e acerto abaixo de 50%</span></span>
+            <span class="ct" id="ctProblematicas">0</span>
+          </button>
           <button class="mode" data-mode="simulado">
             <span class="ic">⏱</span>
             <span><span class="tt">Simulado do caderno</span><span class="ss" id="simSubLabel">Modo prova com cronômetro e placar final</span></span>
@@ -622,6 +627,13 @@
         <datalist id="projectDatalist"></datalist>
         <datalist id="notebookDatalist"></datalist>
 
+        <label class="field">Modo de importação</label>
+        <div class="seg" id="importModeSeg">
+          <button type="button" data-mode="add" class="on">Adicionar apenas novas</button>
+          <button type="button" data-mode="update">Atualizar existentes</button>
+          <button type="button" data-mode="replace">Substituir caderno</button>
+        </div>
+
         <label class="field">Arquivo CSV</label>
         <div class="drop" id="drop">
           <div style="font-size:30px;margin-bottom:6px">📄</div>
@@ -657,6 +669,7 @@
     <div class="hero-head" style="margin-top:4px">
       <h1 style="margin:0">Gerenciar Questões</h1>
       <div class="hero-actions">
+        <button class="btn sm ghost" id="manExportBtn">⬇️ Exportar CSV</button>
         <button class="btn sm ghost" id="manImportBtn">📄 Importar CSV</button>
         <button class="btn sm" id="btnNewQ">＋ Nova questão</button>
       </div>
@@ -699,6 +712,18 @@
       </div>
     </div>
 
+    <div class="stats-grid">
+      <div class="card">
+        <h2>Acurácia por Dificuldade</h2>
+        <div id="difStatsList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Acurácia por Tipo de Questão</h2>
+        <div id="tipoStatsList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Acurácia por Caderno Temático</h2>
       <div id="temaList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
@@ -731,18 +756,18 @@
 
       <div class="card">
         <h2>2. Como funcionam as Datas de Revisão (Sistema de Leitner)</h2>
-        <p style="font-size:14px;color:var(--ink-soft)">Cada questão possui uma <strong>Caixa de 1 a 5</strong> e um carimbo de data/hora da próxima revisão (<code>Para hoje</code>):</p>
+        <p style="font-size:14px;color:var(--ink-soft)">Cada questão possui uma <strong>Caixa de 1 a 5</strong> e uma data da próxima revisão (<code>Para hoje</code>), calculada por dia local (a partir de 00:00):</p>
         <div class="leitner-steps">
-          <div class="l-step"><div class="bx">Caixa 1</div><div class="dy">+1 dia</div><div class="ds">Novas ou erradas</div></div>
-          <div class="l-step"><div class="bx">Caixa 2</div><div class="dy">+3 dias</div><div class="ds">2º acerto</div></div>
-          <div class="l-step"><div class="bx">Caixa 3</div><div class="dy">+7 dias</div><div class="ds">3º acerto</div></div>
-          <div class="l-step"><div class="bx">Caixa 4</div><div class="dy">+16 dias</div><div class="ds">4º acerto</div></div>
-          <div class="l-step"><div class="bx">Caixa 5 ⭐</div><div class="dy">+35 dias</div><div class="ds">Dominada!</div></div>
+          <div class="l-step"><div class="bx">Caixa 1</div><div class="dy">+1 dia</div><div class="ds">1º acerto (vai p/ 2)</div></div>
+          <div class="l-step"><div class="bx">Caixa 2</div><div class="dy">+3 dias</div><div class="ds">Acerto na 2 (vai p/ 3)</div></div>
+          <div class="l-step"><div class="bx">Caixa 3</div><div class="dy">+7 dias</div><div class="ds">Acerto na 3 (vai p/ 4)</div></div>
+          <div class="l-step"><div class="bx">Caixa 4</div><div class="dy">+16 dias</div><div class="ds">Acerto na 4 (vai p/ 5)</div></div>
+          <div class="l-step"><div class="bx">Caixa 5 ⭐</div><div class="dy">+35 dias</div><div class="ds">Dominada (mantém na 5)</div></div>
         </div>
         <ul style="font-size:13.5px;padding-left:18px;color:var(--ink-soft);margin:8px 0 0">
-          <li><strong>Ao importar/criar uma questão:</strong> Ela entra na <strong>Caixa 1</strong> com vencimento imediato (aparece em <em>Para hoje</em>).</li>
-          <li><strong>Ao ACERTAR a questão:</strong> Ela sobe 1 caixa (ex.: Caixa 1 → Caixa 2) e sua próxima aparição no modo <em>Revisão inteligente</em> é agendada para <code>hoje + dias da nova caixa</code>.</li>
-          <li><strong>Ao ERRAR a questão:</strong> Ela volta imediatamente para a <strong>Caixa 1</strong> com vencimento para o mesmo dia, garantindo que você revise o ponto fraco até fixar.</li>
+          <li><strong>Ao importar ou criar uma questão:</strong> Ela entra na <strong>Caixa 1</strong> com vencimento imediato (aparece em <em>Para hoje</em>).</li>
+          <li><strong>Ao ACERTAR a questão:</strong> A próxima revisão é agendada usando o intervalo da <strong>caixa em que a questão estava</strong> (início do dia local + N dias) e, em seguida, ela sobe 1 caixa. Por exemplo: acertar na Caixa 1 agenda <code>+1 dia</code> e move para a Caixa 2; acertar na Caixa 5 agenda <code>+35 dias</code> e permanece na Caixa 5.</li>
+          <li><strong>Ao ERRAR a questão:</strong> Ela volta imediatamente para a <strong>Caixa 1</strong> com vencimento no mesmo dia, garantindo que você revise o ponto fraco até fixar.</li>
           <li><em>Dica:</em> Você pode personalizar os dias de cada caixa em <strong>⚙️ Ajustes</strong>!</li>
         </ul>
       </div>
@@ -881,14 +906,14 @@ Regras:
       <div>
         <div class="card">
           <h2>Revisão inteligente (Leitner)</h2>
-          <p class="lead" style="margin-bottom:10px">Cada questão fica em uma caixa de 1 a 5. Ao acertar, ela sobe de caixa e o reencontro é adiado; ao errar, volta para a caixa 1 e reaparece no mesmo dia.</p>
-          <label class="field">Dias até a próxima revisão, por caixa (após acerto)</label>
+          <p class="lead" style="margin-bottom:10px">Cada questão fica em uma caixa de 1 a 5. Ao acertar, a revisão é agendada pelo intervalo da caixa em que ela estava (contando a partir de 00:00 de hoje) e depois ela sobe de caixa; ao errar, volta para a caixa 1 no mesmo dia.</p>
+          <label class="field">Dias agendados ao acertar em cada caixa</label>
           <div class="intervals" id="intervals">
-            <div class="iv"><span>Caixa 1 <span class="unit">acertou 1x</span></span><input type="number" min="0" inputmode="numeric" data-box="1"></div>
-            <div class="iv"><span>Caixa 2</span><input type="number" min="0" inputmode="numeric" data-box="2"></div>
-            <div class="iv"><span>Caixa 3</span><input type="number" min="0" inputmode="numeric" data-box="3"></div>
-            <div class="iv"><span>Caixa 4</span><input type="number" min="0" inputmode="numeric" data-box="4"></div>
-            <div class="iv"><span>Caixa 5 <span class="unit">dominada</span></span><input type="number" min="0" inputmode="numeric" data-box="5"></div>
+            <div class="iv"><span>Caixa 1 <span class="unit">acerto na 1 → vai p/ 2</span></span><input type="number" min="0" inputmode="numeric" data-box="1"></div>
+            <div class="iv"><span>Caixa 2 <span class="unit">acerto na 2 → vai p/ 3</span></span><input type="number" min="0" inputmode="numeric" data-box="2"></div>
+            <div class="iv"><span>Caixa 3 <span class="unit">acerto na 3 → vai p/ 4</span></span><input type="number" min="0" inputmode="numeric" data-box="3"></div>
+            <div class="iv"><span>Caixa 4 <span class="unit">acerto na 4 → vai p/ 5</span></span><input type="number" min="0" inputmode="numeric" data-box="4"></div>
+            <div class="iv"><span>Caixa 5 <span class="unit">dominada (mantém na 5)</span></span><input type="number" min="0" inputmode="numeric" data-box="5"></div>
           </div>
           <div style="height:12px"></div>
           <button class="btn ghost" id="resetIv">Restaurar padrão (1, 3, 7, 16, 35)</button>
@@ -1113,7 +1138,7 @@ const ICON_PALETTE = [
 ];
 
 const defaultState = () => ({
-  v:3, questions:[], history:[], projects:[], notebooks:[],
+  v:3, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
   settings:{
     shuffleOpts:true, shuffleQ:true, simSize:10, simExam:true,
     projeto:"", tema:"", dificuldade:"", tipo:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
@@ -1126,6 +1151,18 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
 const now = () => Date.now();
 const addDays = (ts,d) => ts + d*86400000;
+function startOfLocalToday(ts){
+  const d = new Date(ts !== undefined ? ts : now());
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+function dueFromToday(days){
+  return addDays(startOfLocalToday(), days);
+}
+function localDayKey(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
 function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [x[i],x[j]]=[x[j],x[i]]; } return x; }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2500); }
 function showConfirm(msg, yesLabel, onYes){
@@ -1167,6 +1204,7 @@ function normalizeLoadedState(s){
   s.settings = Object.assign(def.settings, s.settings||{});
   s.questions = Array.isArray(s.questions) ? s.questions : [];
   s.history = Array.isArray(s.history) ? s.history : [];
+  s.historyDaily = (s.historyDaily && typeof s.historyDaily === "object" && !Array.isArray(s.historyDaily)) ? s.historyDaily : {};
   s.projects = Array.isArray(s.projects) ? s.projects : [];
 
   // Migrar notebooks antigos (strings -> objetos { name, project, icon })
@@ -1193,6 +1231,51 @@ function normalizeLoadedState(s){
   return s;
 }
 
+function compactOldHistory(stateObj){
+  if(!stateObj || !Array.isArray(stateObj.history) || !stateObj.history.length) return;
+  const cutoff = now() - 90 * 86400000;
+  if(!stateObj.history.some(h => h && typeof h.t === "number" && h.t < cutoff)) return;
+  stateObj.historyDaily = (stateObj.historyDaily && typeof stateObj.historyDaily === "object" && !Array.isArray(stateObj.historyDaily))
+    ? stateObj.historyDaily
+    : {};
+  const recent = [];
+  for(const h of stateObj.history){
+    if(h && typeof h.t === "number" && h.t < cutoff){
+      const day = localDayKey(h.t);
+      const bucket = stateObj.historyDaily[day] || (stateObj.historyDaily[day] = { total: 0, acertos: 0 });
+      bucket.total = (bucket.total || 0) + 1;
+      if(h.ok) bucket.acertos = (bucket.acertos || 0) + 1;
+    } else if(h){
+      recent.push(h);
+    }
+  }
+  stateObj.history = recent;
+}
+
+function globalHistoryTotals(){
+  let total = S.history.length;
+  let acertos = S.history.filter(h => h.ok).length;
+  for(const v of Object.values(S.historyDaily || {})){
+    if(v && typeof v === "object"){
+      total += (v.total || 0);
+      acertos += (v.acertos || 0);
+    }
+  }
+  return { total, acertos };
+}
+
+function activityCountsByDay(){
+  const counts = {};
+  for(const [day, v] of Object.entries(S.historyDaily || {})){
+    if(v && v.total > 0) counts[day] = (counts[day] || 0) + v.total;
+  }
+  for(const h of S.history){
+    const k = localDayKey(h.t);
+    counts[k] = (counts[k] || 0) + 1;
+  }
+  return counts;
+}
+
 function load(){
   try{
     const raw = Store.get(KEY);
@@ -1205,6 +1288,7 @@ function updateSavePill(){
   if(el) el.textContent = `💾 Salvo (${S.questions.length} q)`;
 }
 function save(){
+  compactOldHistory(S);
   Store.set(KEY, JSON.stringify(S));
   updateSavePill();
 }
@@ -1410,7 +1494,16 @@ function parseLacunaSpec(correta){
   return { ordemLivre, lacunas };
 }
 
-function analyzeCSV(text, fallbackProj, fallbackTema){
+let currentImportMode = "add";
+
+function setImportMode(mode){
+  currentImportMode = mode || "add";
+  $$("#importModeSeg button").forEach(b => b.classList.toggle("on", b.dataset.mode === currentImportMode));
+  updateImportPreview();
+}
+
+function analyzeCSV(text, fallbackProj, fallbackTema, modeOverride){
+  const mode = modeOverride || currentImportMode || "add";
   const cleaned = cleanCSVInput(text);
   if(!cleaned) return { ok:false, msg:"Cole o conteúdo CSV ou escolha um arquivo .csv." };
   const delim = detectDelim(cleaned);
@@ -1439,8 +1532,15 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
   const defProj = (fallbackProj !== undefined ? fallbackProj : ($("#importDefaultProj") ? $("#importDefaultProj").value : "")).trim();
   const defTema = (fallbackTema !== undefined ? fallbackTema : ($("#importDefaultTema") ? $("#importDefaultTema").value : "")).trim();
 
-  const existing = new Set(S.questions.map(q => `${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`));
-  const items = [];
+  const existingMap = new Map();
+  for(const q of S.questions){
+    existingMap.set(`${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`, q);
+  }
+  const seenInFile = new Set();
+  const touchedNbKeys = new Set();
+  const newItems = [];
+  const updateItems = [];
+  const removeItems = [];
   let duplicates = 0, invalid = 0;
   const inconsistentLines = [];
   const countsByType = { multipla:0, ce:0, lacuna:0 };
@@ -1454,7 +1554,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
     const finalProj = defProj || obj.projeto || S.settings.projeto || "Geral";
     const finalTema = defTema || obj.tema || S.settings.tema || "Geral";
     const dupKey = `${norm(finalProj)}::${norm(finalTema)}::${norm(enun)}`;
-    if(existing.has(dupKey)){ duplicates++; continue; }
+    const nbKey = `${norm(finalProj)}:::${norm(finalTema)}`;
 
     const opcoes=[];
     for(const L of ["a","b","c","d","e"]){ const t=obj["opt_"+L]; if(t) opcoes.push({k:L, t}); }
@@ -1514,16 +1614,52 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
       finalCorreta = c;
     }
 
-    countsByType[tipo]++;
-    existing.add(dupKey);
-    items.push({
+    if(seenInFile.has(dupKey)){
+      duplicates++;
+      continue;
+    }
+
+    const itemData = {
       enunciado: enun, tipo, opcoes: finalOpcoes, correta: finalCorreta,
       projeto: finalProj, tema: finalTema,
       dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||""
-    });
+    };
+
+    if(mode === "add"){
+      if(existingMap.has(dupKey)){
+        duplicates++;
+        continue;
+      }
+      seenInFile.add(dupKey);
+      touchedNbKeys.add(nbKey);
+      countsByType[tipo]++;
+      newItems.push(itemData);
+    } else {
+      seenInFile.add(dupKey);
+      touchedNbKeys.add(nbKey);
+      countsByType[tipo]++;
+      if(existingMap.has(dupKey)){
+        updateItems.push(Object.assign({ targetId: existingMap.get(dupKey).id }, itemData));
+      } else {
+        newItems.push(itemData);
+      }
+    }
   }
 
-  return { ok:true, items, duplicates, invalid, inconsistentLines, countsByType, defProj, defTema };
+  if(mode === "replace" && touchedNbKeys.size > 0){
+    for(const q of S.questions){
+      const nbKey = `${norm(projOf(q))}:::${norm(temaOf(q))}`;
+      const dupKey = `${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`;
+      if(touchedNbKeys.has(nbKey) && !seenInFile.has(dupKey)){
+        removeItems.push(q);
+      }
+    }
+  }
+
+  return {
+    ok:true, mode, items: newItems, newItems, updateItems, removeItems,
+    duplicates, invalid, inconsistentLines, countsByType, defProj, defTema
+  };
 }
 
 function updateImportPreview(){
@@ -1538,36 +1674,62 @@ function updateImportPreview(){
     box.innerHTML = `<span style="color:var(--err);font-weight:700">⚠️ Atenção:</span> ${esc(res.msg)}`;
     return;
   }
-  box.style.borderColor = res.items.length ? "var(--ok)" : "var(--warn)";
+  const hasAction = (res.newItems.length + res.updateItems.length + res.removeItems.length) > 0;
+  box.style.borderColor = hasAction ? "var(--ok)" : "var(--warn)";
   const parts = [];
   if(res.countsByType.multipla) parts.push(`${res.countsByType.multipla} Múltipla Escolha`);
   if(res.countsByType.ce) parts.push(`${res.countsByType.ce} Certo/Errado`);
   if(res.countsByType.lacuna) parts.push(`${res.countsByType.lacuna} Lacuna`);
+
+  const modeCounts = [];
+  if(res.mode === "add"){
+    modeCounts.push(`${res.newItems.length} nova(s)`);
+  } else if(res.mode === "update"){
+    modeCounts.push(`${res.newItems.length} nova(s)`);
+    modeCounts.push(`${res.updateItems.length} atualizada(s)`);
+  } else {
+    modeCounts.push(`${res.newItems.length} nova(s)`);
+    modeCounts.push(`${res.updateItems.length} atualizada(s)`);
+    modeCounts.push(`${res.removeItems.length} removida(s)`);
+  }
+
   const extra = [];
-  if(res.duplicates) extra.push(`${res.duplicates} já existente(s) no mesmo caderno`);
+  if(res.duplicates) extra.push(`${res.duplicates} já existente(s)/duplicada(s)`);
   if(res.invalid) extra.push(`${res.invalid} linha(s) inválida(s)/incompleta(s)`);
   const inconsHtml = (res.inconsistentLines && res.inconsistentLines.length)
     ? `<br><span style="font-size:12px;color:var(--err);font-weight:600">Linhas com lacunas inconsistentes: ${res.inconsistentLines.join(", ")}</span>`
     : "";
-  box.innerHTML = res.items.length
-    ? `<strong style="color:var(--ok)">✓ Pronto para importar: ${res.items.length} questão(ões) válida(s)</strong> (${parts.join(" • ")})${extra.length ? `<br><span style="font-size:12px">Ignoradas: ${extra.join(", ")}.</span>` : ""}${inconsHtml}`
-    : `<strong style="color:var(--warn)">⚠️ Nenhuma questão nova para adicionar</strong>${extra.length ? ` (${extra.join(", ")})` : ""}.${inconsHtml}`;
+  box.innerHTML = hasAction
+    ? `<strong style="color:var(--ok)">✓ Pronto para importar (${modeCounts.join(", ")})</strong>${parts.length ? ` • (${parts.join(" • ")})` : ""}${extra.length ? `<br><span style="font-size:12px">Ignoradas: ${extra.join(", ")}.</span>` : ""}${inconsHtml}`
+    : `<strong style="color:var(--warn)">⚠️ Nenhuma questão para alterar neste modo</strong>${extra.length ? ` (${extra.join(", ")})` : ""}.${inconsHtml}`;
 }
 
-function importCSV(text, fallbackProj, fallbackTema){
-  const res = analyzeCSV(text, fallbackProj, fallbackTema);
-  if(!res.ok){ toast(res.msg); updateImportPreview(); return; }
-  if(!res.items.length){
-    const reason = res.duplicates ? `Todas as ${res.duplicates} questões já existem neste caderno.` : "Nenhuma questão válida encontrada no CSV.";
-    toast(reason);
-    updateImportPreview();
-    return;
-  }
-
+function executeCSVImportResult(res){
   const touchedProjects = new Set();
   const touchedNotebooks = new Set();
 
-  for(const item of res.items){
+  if(res.mode === "replace" && res.removeItems.length){
+    const remIds = new Set(res.removeItems.map(q => q.id));
+    S.questions = S.questions.filter(q => !remIds.has(q.id));
+  }
+
+  for(const u of res.updateItems){
+    ensureNotebookExists(u.tema, u.projeto);
+    touchedProjects.add(u.projeto);
+    touchedNotebooks.add(`${u.projeto}:::${u.tema}`);
+    const q = S.questions.find(x => x.id === u.targetId);
+    if(q){
+      q.opcoes = u.opcoes;
+      q.correta = u.correta;
+      q.tipo = u.tipo;
+      q.dificuldade = u.dificuldade;
+      q.explicacao = u.explicacao;
+      q.projeto = u.projeto;
+      q.tema = u.tema;
+    }
+  }
+
+  for(const item of res.newItems){
     ensureNotebookExists(item.tema, item.projeto);
     touchedProjects.add(item.projeto);
     touchedNotebooks.add(`${item.projeto}:::${item.tema}`);
@@ -1584,8 +1746,11 @@ function importCSV(text, fallbackProj, fallbackTema){
   if($("#file")) $("#file").value = "";
   updateImportPreview();
 
-  const skipCount = res.duplicates + res.invalid;
-  toast(`${res.items.length} questão(ões) importada(s)${skipCount?` (${skipCount} ignoradas)`:""}!`);
+  const summaryParts = [];
+  if(res.newItems.length) summaryParts.push(`${res.newItems.length} adicionada(s)`);
+  if(res.updateItems.length) summaryParts.push(`${res.updateItems.length} atualizada(s)`);
+  if(res.removeItems.length) summaryParts.push(`${res.removeItems.length} removida(s)`);
+  toast(`Importação concluída: ${summaryParts.join(", ")}!`);
 
   if(touchedNotebooks.size === 1){
     const [p, t] = Array.from(touchedNotebooks)[0].split(":::");
@@ -1597,20 +1762,57 @@ function importCSV(text, fallbackProj, fallbackTema){
   }
 }
 
+function importCSV(text, fallbackProj, fallbackTema, modeOverride){
+  const res = analyzeCSV(text, fallbackProj, fallbackTema, modeOverride);
+  if(!res.ok){ toast(res.msg); updateImportPreview(); return; }
+  const hasAction = (res.newItems.length + res.updateItems.length + res.removeItems.length) > 0;
+  if(!hasAction){
+    const reason = res.duplicates ? `Todas as ${res.duplicates} questões já existem neste caderno.` : "Nenhuma questão válida encontrada no CSV.";
+    toast(reason);
+    updateImportPreview();
+    return;
+  }
+
+  if(res.mode === "replace"){
+    showConfirm(
+      `Substituir caderno: ${res.removeItems.length} questão(ões) ausente(s) do CSV serão removidas, ${res.updateItems.length} atualizada(s) e ${res.newItems.length} adicionada(s). Deseja continuar?`,
+      "Substituir",
+      () => executeCSVImportResult(res)
+    );
+    return;
+  }
+
+  executeCSVImportResult(res);
+}
+
 /* ---------- repetição espaçada ---------- */
 function ivDays(box){ const a=S.settings.intervals||DEFAULT_INTERVALS; const v=a[box-1]; return (typeof v==="number" && v>=0) ? v : DEFAULT_INTERVALS[box-1]; }
 function gradeQuestion(q, ok){
   q.vistas++;
   q.ultima = ok;
   S.history.push({qid:q.id, ok, t:now()});
-  if(ok){ q.acertos++; q.box=Math.min(5,q.box+1); q.due=addDays(now(), ivDays(q.box)); }
-  else { q.erros++; q.box=1; q.due=now(); }
+  if(ok){
+    const prevBox = Math.min(5, Math.max(1, q.box || 1));
+    q.acertos++;
+    q.due = dueFromToday(ivDays(prevBox));
+    q.box = Math.min(5, prevBox + 1);
+  } else {
+    q.erros++;
+    q.box = 1;
+    q.due = now();
+  }
   save();
 }
 
 /* ---------- contagens / filtros ---------- */
 const isDue = q => q.due <= now();
 const countMastered = () => S.questions.filter(q => q.box>=5).length;
+function isProblematic(q){
+  const a = q.acertos || 0;
+  const e = q.erros || 0;
+  const tot = a + e;
+  return e >= 4 && tot > 0 && (a / tot) < 0.5;
+}
 
 function pool(){
   const p = S.settings.projeto;
@@ -1678,8 +1880,7 @@ function renderProjects(){
 
   const totalQ = S.questions.length;
   const totalDue = S.questions.filter(isDue).length;
-  const totHist = S.history.length;
-  const acHist = S.history.filter(h=>h.ok).length;
+  const { total: totHist, acertos: acHist } = globalHistoryTotals();
   const globalAcc = totHist ? Math.round(acHist/totHist*100)+"%" : "—";
 
   $("#prCount").textContent = projs.length;
@@ -2028,13 +2229,17 @@ function renderHome(){
   const hist = S.history.filter(h=>ids.has(h.qid));
   const due = base.filter(isDue).length;
   const err = base.filter(q=>q.ultima===false).length;
+  const prob = base.filter(isProblematic).length;
   $("#sTotal").textContent = total;
   $("#sDue").textContent = due;
-  const ac = hist.filter(h=>h.ok).length;
-  $("#sAcc").textContent = hist.length ? Math.round(ac/hist.length*100)+"%" : "—";
+  let ac = 0, totAns = 0;
+  for(const q of base){ ac += (q.acertos || 0); totAns += (q.acertos || 0) + (q.erros || 0); }
+  if(!totAns && hist.length){ totAns = hist.length; ac = hist.filter(h=>h.ok).length; }
+  $("#sAcc").textContent = totAns ? Math.round(ac/totAns*100)+"%" : "—";
   $("#ctRevisao").textContent = due;
   $("#ctErradas").textContent = err;
   $("#ctTodas").textContent = total;
+  if($("#ctProblematicas")) $("#ctProblematicas").textContent = prob;
   $("#ctSim").textContent = S.settings.simSize ? Math.min(S.settings.simSize,total) : total;
   $("#simSubLabel").textContent = S.settings.simExam ? "Modo prova: gabarito e tempo ao final" : "Seleção aleatória com cronômetro";
   $("#homeLead").textContent = total
@@ -2042,7 +2247,7 @@ function renderHome(){
     : "Este caderno ainda não tem questões. Use os botões ao lado para criar ou importar CSV.";
   $$("#modes .mode").forEach(b=>{
     const m=b.dataset.mode;
-    const n = m==="revisao"?due : m==="erradas"?err : total;
+    const n = m==="revisao"?due : m==="erradas"?err : m==="problematicas"?prob : total;
     b.disabled = n===0;
   });
 
@@ -2051,7 +2256,7 @@ function renderHome(){
     const b = Math.min(5, Math.max(1, q.box||1));
     boxes[b-1]++;
   }
-  const labels = ["Caixa 1 (Hoje)", "Caixa 2 (+3d)", "Caixa 3 (+7d)", "Caixa 4 (+16d)", "Caixa 5 ⭐ (+35d)"];
+  const labels = [1,2,3,4,5].map(b => `Caixa ${b}${b===5?" ⭐":""} (+${ivDays(b)}d)`);
   $("#nbBoxList").innerHTML = boxes.map((c, idx) => {
     const p = total ? Math.round(c / total * 100) : 0;
     return `<div class="tema-row">
@@ -2084,10 +2289,30 @@ function buildQueue(mode){
   let list;
   if(mode==="revisao") list = base.filter(isDue).sort((a,b)=>a.due-b.due);
   else if(mode==="erradas") list = base.filter(q=>q.ultima===false);
+  else if(mode==="problematicas") list = base.filter(isProblematic);
   else if(mode==="simulado"){ const n=S.settings.simSize; list = shuffle(base); if(n) list=list.slice(0,n); }
   else list = base.slice();
   if(mode!=="revisao" && S.settings.shuffleQ) list = shuffle(list);
   return list;
+}
+
+function requestExitQuiz(){
+  if(!$("#quiz").classList.contains("active") || !sess){
+    renderHome();
+    show("home");
+    return;
+  }
+  const answeredCount = sess.answers ? sess.answers.length : 0;
+  if(answeredCount > 0){
+    showConfirm(
+      `Você já respondeu ${answeredCount} questão(ões) nesta sessão. Deseja sair agora? As respostas dadas continuam registradas.`,
+      "Sair",
+      () => { renderHome(); show("home"); }
+    );
+  } else {
+    renderHome();
+    show("home");
+  }
 }
 
 function startSession(mode, customQueue){
@@ -2215,7 +2440,7 @@ function formatLacunaExpectedSummary(correta){
 function renderQ(){
   const q = sess.queue[sess.i];
   const tp = tipoOf(q);
-  sess.answered=false; sess.picked=null; sess.eliminated=new Set();
+  sess.answered=false; sess.picked=null; sess.prevQState=null; sess.eliminated=new Set();
   $("#prog").style.width = (sess.i/sess.queue.length*100)+"%";
   $("#qcount").textContent = `${sess.i+1}/${sess.queue.length}`;
 
@@ -2224,6 +2449,7 @@ function renderQ(){
   meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
+  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
   if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
 
@@ -2368,6 +2594,14 @@ function confirmAnswer(){
   const ok = tp === "lacuna" ? lacRes.ok : (sess.picked === q.correta);
   const recordedPick = Array.isArray(sess.picked) ? sess.picked.slice() : sess.picked;
 
+  sess.prevQState = {
+    box: q.box || 1,
+    due: q.due,
+    acertos: q.acertos || 0,
+    erros: q.erros || 0,
+    ultima: q.ultima
+  };
+
   if(sess.isExam){
     sess.answers.push({ q, picked: recordedPick, ok });
     if(ok) sess.right++; else sess.wrong.push(q);
@@ -2430,12 +2664,19 @@ function confirmAnswer(){
 }
 
 function overrideLacunaAsCorrect(q){
-  // Reverte o último registro de erro para acerto
-  if(q.erros > 0) q.erros--;
-  q.acertos++;
+  const snap = sess.prevQState || {
+    box: q.box || 1,
+    due: q.due,
+    acertos: q.acertos || 0,
+    erros: Math.max(0, (q.erros || 1) - 1),
+    ultima: q.ultima
+  };
+  const prevBox = Math.min(5, Math.max(1, snap.box || 1));
+  q.acertos = snap.acertos + 1;
+  q.erros = snap.erros;
   q.ultima = true;
-  q.box = Math.min(5, (q.box||1) + 1);
-  q.due = addDays(now(), ivDays(q.box));
+  q.due = dueFromToday(ivDays(prevBox));
+  q.box = Math.min(5, prevBox + 1);
   if(S.history.length) S.history[S.history.length - 1].ok = true;
   sess.right++;
   sess.wrong = sess.wrong.filter(x => x.id !== q.id);
@@ -2447,6 +2688,8 @@ function overrideLacunaAsCorrect(q){
     inp.classList.remove("wrong");
     inp.classList.add("correct");
   });
+  const boxTag = $("#qmeta .tag.box");
+  if(boxTag) boxTag.textContent = `caixa ${q.box}/5`;
   $("#feedback").className = "feedback show ok";
   $("#verdict").innerHTML = "✓ Considerado como acerto!";
   $("#overrideOkBtn").style.display = "none";
@@ -2518,13 +2761,10 @@ function hideDock(){ $("#dock").classList.remove("show"); }
 function setDock(label, disabled){ const b=$("#dockBtn"); b.textContent=label; b.disabled=!!disabled; }
 
 /* ---------- estatísticas & ofensiva ---------- */
-function localDayKey(ts){
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
 function calcStreak(){
-  if(!S.history.length) return 0;
-  const days = new Set(S.history.map(h => localDayKey(h.t)));
+  const countsByDay = activityCountsByDay();
+  const days = new Set(Object.keys(countsByDay).filter(k => countsByDay[k] > 0));
+  if(!days.size) return 0;
   let streak = 0;
   const cur = new Date();
   cur.setHours(12,0,0,0);
@@ -2539,18 +2779,14 @@ function calcStreak(){
   return streak;
 }
 function renderStats(){
-  const tot=S.history.length, ac=S.history.filter(h=>h.ok).length;
+  const { total: tot, acertos: ac } = globalHistoryTotals();
   $("#stRespondidas").textContent = tot;
   $("#stAcc").textContent = tot ? Math.round(ac/tot*100)+"%" : "—";
   $("#stDominadas").textContent = countMastered();
   $("#stStreak").textContent = `${calcStreak()}d`;
 
   const dayNames = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-  const countsByDay = {};
-  for(const h of S.history){
-    const k = localDayKey(h.t);
-    countsByDay[k] = (countsByDay[k] || 0) + 1;
-  }
+  const countsByDay = activityCountsByDay();
   const days7 = [];
   let maxDay = 1;
   for(let i=6;i>=0;i--){
@@ -2592,6 +2828,68 @@ function renderStats(){
       <span class="pct">${p}%</span>
     </div>`;
   }).join("");
+
+  // Acurácia por Dificuldade
+  const difOrder = ["Fácil", "Média", "Difícil", "Sem classificação"];
+  const byDif = {
+    "Fácil": { a:0, e:0 },
+    "Média": { a:0, e:0 },
+    "Difícil": { a:0, e:0 },
+    "Sem classificação": { a:0, e:0 }
+  };
+  for(const q of S.questions){
+    const a = q.acertos || 0, e = q.erros || 0;
+    if(a + e === 0) continue;
+    const nd = norm(q.dificuldade || "");
+    const key = (nd.includes("facil") || nd==="easy") ? "Fácil"
+      : (nd.includes("medi") || nd==="medium") ? "Média"
+      : (nd.includes("dificil") || nd==="hard") ? "Difícil"
+      : "Sem classificação";
+    byDif[key].a += a;
+    byDif[key].e += e;
+  }
+  const difBox = $("#difStatsList");
+  const activeDifs = difOrder.filter(k => (byDif[k].a + byDif[k].e) > 0);
+  if(!activeDifs.length){
+    difBox.innerHTML = '<div class="empty"><div class="big">📊</div>Responda algumas questões para ver os dados por dificuldade.</div>';
+  } else {
+    difBox.innerHTML = activeDifs.map(k => {
+      const o = byDif[k], totD = o.a + o.e, p = Math.round(o.a / totD * 100);
+      return `<div class="tema-row"><span class="nm">${esc(k)}</span>
+        <span class="cnt">${o.a}/${totD}</span>
+        <span class="minibar"><i style="width:${p}%"></i></span>
+        <span class="pct">${p}%</span></div>`;
+    }).join("");
+  }
+
+  // Acurácia por Tipo
+  const tipoOrder = [
+    { k:"multipla", l:"Múltipla Escolha" },
+    { k:"ce", l:"Certo/Errado" },
+    { k:"lacuna", l:"Lacuna" }
+  ];
+  const byTipo = { multipla:{a:0,e:0}, ce:{a:0,e:0}, lacuna:{a:0,e:0} };
+  for(const q of S.questions){
+    const a = q.acertos || 0, e = q.erros || 0;
+    if(a + e === 0) continue;
+    const tp = tipoOf(q);
+    (byTipo[tp] ||= {a:0,e:0});
+    byTipo[tp].a += a;
+    byTipo[tp].e += e;
+  }
+  const tipoBox = $("#tipoStatsList");
+  const activeTipos = tipoOrder.filter(o => (byTipo[o.k].a + byTipo[o.k].e) > 0);
+  if(!activeTipos.length){
+    tipoBox.innerHTML = '<div class="empty"><div class="big">📊</div>Responda algumas questões para ver os dados por tipo.</div>';
+  } else {
+    tipoBox.innerHTML = activeTipos.map(item => {
+      const o = byTipo[item.k], totT = o.a + o.e, p = Math.round(o.a / totT * 100);
+      return `<div class="tema-row"><span class="nm">${esc(item.l)}</span>
+        <span class="cnt">${o.a}/${totT}</span>
+        <span class="minibar"><i style="width:${p}%"></i></span>
+        <span class="pct">${p}%</span></div>`;
+    }).join("");
+  }
 
   const byTema={};
   for(const q of S.questions){
@@ -2652,6 +2950,67 @@ function setEqModalTipo(tipo){
   if(currentEqTipo === "lacuna") syncEqLacunaFields();
 }
 
+function getFilteredManageQuestions(){
+  const query = norm($("#qSearch") ? $("#qSearch").value : "");
+  const fProj = $("#qFilterProj") ? $("#qFilterProj").value : "";
+  const fTema = $("#qFilterTema") ? $("#qFilterTema").value : "";
+  const fTipo = $("#qFilterTipo") ? $("#qFilterTipo").value : "";
+
+  return S.questions.filter(q => {
+    if(fProj && norm(projOf(q)) !== norm(fProj)) return false;
+    if(fTema && norm(temaOf(q)) !== norm(fTema)) return false;
+    if(fTipo && tipoOf(q) !== fTipo) return false;
+    if(query && !norm(q.enunciado + " " + q.projeto + " " + q.tema + " " + q.dificuldade + " " + q.explicacao).includes(query)) return false;
+    return true;
+  });
+}
+
+function exportFilteredCSV(){
+  const list = getFilteredManageQuestions();
+  if(!list.length){
+    toast("Nenhuma questão no filtro atual para exportar.");
+    return;
+  }
+  const csvQuote = val => `"${String(val ?? "").replace(/"/g, '""')}"`;
+  const header = "enunciado,a,b,c,d,e,correta,projeto,tema,tipo,dificuldade,explicacao";
+  const rows = [header];
+
+  for(const q of list){
+    const tp = tipoOf(q);
+    const optsMap = { a:"", b:"", c:"", d:"", e:"" };
+    if(tp === "multipla" && Array.isArray(q.opcoes)){
+      for(const o of q.opcoes){
+        if(o && optsMap[o.k] !== undefined) optsMap[o.k] = o.t || "";
+      }
+    }
+    let cor = "";
+    if(tp === "multipla") cor = q.correta || "a";
+    else if(tp === "ce") cor = q.correta === "c" ? "Certo" : "Errado";
+    else cor = String(q.correta || "");
+
+    const cols = [
+      q.enunciado || "",
+      optsMap.a, optsMap.b, optsMap.c, optsMap.d, optsMap.e,
+      cor,
+      projOf(q),
+      temaOf(q),
+      tp,
+      q.dificuldade || "",
+      q.explicacao || ""
+    ].map(csvQuote);
+    rows.push(cols.join(","));
+  }
+
+  const csvContent = "\uFEFF" + rows.join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `qdequestao-questoes-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`${list.length} questão(ões) exportada(s) em CSV!`);
+}
+
 function renderManage(preselectProj, preselectTema){
   updateDatalists();
   const selP = $("#qFilterProj");
@@ -2668,18 +3027,7 @@ function renderManage(preselectProj, preselectTema){
   selT.innerHTML = `<option value="">Todos os cadernos</option>` +
     uniqueTemas.map(t=>`<option value="${esc(t)}"${curTema===t?" selected":""}>${esc(t)}</option>`).join("");
 
-  const query = norm($("#qSearch").value);
-  const fProj = selP.value;
-  const fTema = selT.value;
-  const fTipo = $("#qFilterTipo").value;
-
-  const list = S.questions.filter(q => {
-    if(fProj && norm(projOf(q)) !== norm(fProj)) return false;
-    if(fTema && norm(temaOf(q)) !== norm(fTema)) return false;
-    if(fTipo && tipoOf(q) !== fTipo) return false;
-    if(query && !norm(q.enunciado + " " + q.projeto + " " + q.tema + " " + q.dificuldade + " " + q.explicacao).includes(query)) return false;
-    return true;
-  });
+  const list = getFilteredManageQuestions();
 
   const wrap = $("#qList");
   if(!list.length){
@@ -2712,6 +3060,7 @@ function renderManage(preselectProj, preselectTema){
           ${q.dificuldade ? `<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>` : ""}
           <span class="tag box">caixa ${q.box}/5</span>
           <span class="tag">✓ ${q.acertos} • ✕ ${q.erros}</span>
+          ${isProblematic(q) ? `<span class="tag dif-hard">⚠ problemática</span>` : ""}
         </div>
       </div>
       <div style="font-size:12.5px;color:var(--ok);font-weight:600;margin-top:4px">${gabHtml}</div>
@@ -2778,6 +3127,7 @@ function refreshActiveQuizAfterEdit(q){
   meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
+  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
   if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
   $("#exp").textContent = q.explicacao || "";
@@ -2918,7 +3268,13 @@ window.addEventListener("keydown", e => {
   if(["INPUT","TEXTAREA","SELECT"].includes(tag)){
     if(e.key === "Enter" && $("#projModal").classList.contains("show")){ e.preventDefault(); saveProjModal(); }
     if(e.key === "Enter" && $("#nbModal").classList.contains("show")){ e.preventDefault(); saveNbModal(); }
-    if(e.key === "Escape" && $("#quiz").classList.contains("active")){ e.preventDefault(); renderHome(); show("home"); }
+    if(e.key === "Escape"){
+      if($("#projModal").classList.contains("show")){ e.preventDefault(); closeProjModal(); return; }
+      if($("#nbModal").classList.contains("show")){ e.preventDefault(); closeNbModal(); return; }
+      if($("#editModal").classList.contains("show")){ e.preventDefault(); closeEditModal(); return; }
+      if($("#modal").classList.contains("show")){ e.preventDefault(); $("#modalNo").click(); return; }
+      if($("#quiz").classList.contains("active")){ e.preventDefault(); requestExitQuiz(); return; }
+    }
     return;
   }
 
@@ -2956,13 +3312,14 @@ window.addEventListener("keydown", e => {
     const btn = $("#dockBtn");
     if(btn && !btn.disabled){ e.preventDefault(); confirmAnswer(); }
   } else if(e.key === "Escape"){
-    e.preventDefault(); renderHome(); show("home");
+    e.preventDefault(); requestExitQuiz();
   }
 });
 
 /* ---------- eventos ---------- */
 $$("#modes .mode").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled) startSession(b.dataset.mode); }));
 $$("#eqTipoSeg button").forEach(b=> b.addEventListener("click", ()=>setEqModalTipo(b.dataset.tipo)));
+$$("#importModeSeg button").forEach(b=> b.addEventListener("click", ()=>setImportMode(b.dataset.mode)));
 $("#eqEnun").addEventListener("input", ()=>{ if(currentEqTipo === "lacuna") syncEqLacunaFields(); });
 
 function openImportView(prefillProj, prefillTema){
@@ -3046,7 +3403,8 @@ $("#copyPromptBtn").addEventListener("click", ()=>{
   }
 });
 
-$("#quizBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
+$("#quizBack").addEventListener("click", requestExitQuiz);
+$("#manExportBtn").addEventListener("click", exportFilteredCSV);
 $("#dockBtn").addEventListener("click", confirmAnswer);
 $("#resBackNotebook").addEventListener("click", ()=>{ renderHome(); show("home"); });
 $("#resHome").addEventListener("click", goProjects);
