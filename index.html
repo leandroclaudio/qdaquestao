@@ -613,6 +613,7 @@
 
         <label class="field">ou cole o conteúdo CSV aqui</label>
         <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao"></textarea>
+        <div id="importPreview" class="hint" style="display:none;margin-top:10px;margin-bottom:4px"></div>
         <div style="height:12px"></div>
         <div class="row">
           <button class="btn" id="doImport">Importar e salvar na memória</button>
@@ -1305,62 +1306,107 @@ function renderIconPicker(gridId, inputId){
 }
 
 /* ---------- CSV (Múltipla Escolha + Certo/Errado + Lacuna) ---------- */
+function cleanCSVInput(text){
+  return String(text || "")
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/^\s*```(?:csv|txt|text)?\s*\n?/i, "")
+    .replace(/\n?\s*```\s*$/i, "")
+    .trim();
+}
 function detectDelim(text){
-  const head = text.split(/\r?\n/)[0] || "";
+  const lines = cleanCSVInput(text).split("\n").map(l => l.trim()).filter(Boolean);
+  const head = lines[0] || "";
   const counts = { ",":0, ";":0, "\t":0 };
   let q=false;
   for(const ch of head){ if(ch==='"'){q=!q;continue;} if(!q && counts[ch]!==undefined) counts[ch]++; }
   let best=",",max=-1; for(const d in counts){ if(counts[d]>max){max=counts[d];best=d;} }
   return best;
 }
-function parseCSV(text, delim){
-  text = text.replace(/^\uFEFF/, "");
-  const rows=[]; let row=[], field="", q=false, i=0;
+function parseCSV(rawText, delim){
+  const text = cleanCSVInput(rawText);
+  if(!text) return [];
+  const rows=[]; let row=[], field="", q=false, atStart=true, i=0;
   while(i<text.length){
     const c=text[i];
     if(q){
-      if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i+=2; continue; } q=false; i++; continue; }
+      if(c==='"'){
+        if(text[i+1]==='"'){ field+='"'; i+=2; continue; }
+        q=false; i++;
+        while(i<text.length && text[i]===' ') i++;
+        continue;
+      }
       field+=c; i++; continue;
     }
-    if(c==='"'){ q=true; i++; continue; }
-    if(c===delim){ row.push(field); field=""; i++; continue; }
-    if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=""; i++; continue; }
-    if(c==='\r'){ i++; continue; }
-    field+=c; i++;
+    if(atStart && (c===' ' || c==='\t')){ i++; continue; }
+    if(atStart && c==='"'){ q=true; atStart=false; i++; continue; }
+    if(c===delim){ row.push(field.trim()); field=""; atStart=true; i++; continue; }
+    if(c==='\n'){ row.push(field.trim()); rows.push(row); row=[]; field=""; atStart=true; i++; continue; }
+    field+=c; atStart=false; i++;
   }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
+  if(field.length || row.length){ row.push(field.trim()); rows.push(row); }
   return rows.filter(r => r.some(x => String(x).trim()!==""));
 }
 function mapHeader(h){
-  const n = norm(h);
-  if(["enunciado","pergunta","questao","question","texto"].includes(n)) return "enunciado";
-  if(["correta","resposta","gabarito","resposta correta","resposta_correta"].includes(n)) return "correta";
-  if(["projeto","concurso","edital","pasta"].includes(n)) return "projeto";
-  if(["tema","assunto","categoria","topico","materia","disciplina","caderno"].includes(n)) return "tema";
-  if(["tipo","formato","modalidade"].includes(n)) return "tipo";
-  if(["dificuldade","nivel"].includes(n)) return "dificuldade";
-  if(["explicacao","justificativa","comentario","gabarito comentado"].includes(n)) return "explicacao";
-  let m = n.match(/^(?:alternativa[ _]?)?([a-e])$/); if(m) return "opt_"+m[1];
+  const n = norm(h).replace(/^["']+|["']+$/g, "").trim();
+  if(["enunciado","pergunta","questao","questoes","question","texto","afirmacao","item"].includes(n)) return "enunciado";
+  if(["correta","resposta","gabarito","resposta correta","resposta_correta","resp","correto","answer","chave"].includes(n)) return "correta";
+  if(["projeto","concurso","edital","pasta","objetivo","curso"].includes(n)) return "projeto";
+  if(["tema","assunto","categoria","topico","materia","disciplina","caderno","modulo","area","subtema"].includes(n)) return "tema";
+  if(["tipo","formato","modalidade","type","modelo"].includes(n)) return "tipo";
+  if(["dificuldade","nivel","level","grau"].includes(n)) return "dificuldade";
+  if(["explicacao","justificativa","comentario","comentarios","gabarito comentado","resolucao","feedback","obs"].includes(n)) return "explicacao";
+  let m = n.match(/^(?:alternativa|opcao|alt|item|letra)?[ _\-()]*([a-e])[).]?$/);
+  if(m) return "opt_"+m[1];
+  let mNum = n.match(/^(?:alternativa|opcao|alt|item)[ _\-]*([1-5])$/);
+  if(mNum) return "opt_"+["a","b","c","d","e"][Number(mNum[1])-1];
   return null;
 }
 
-function importCSV(text, fallbackProj, fallbackTema){
-  if(!text.trim()){ toast("Cole ou selecione um CSV."); return; }
-  const delim = detectDelim(text);
-  const rows = parseCSV(text, delim);
-  if(rows.length < 2){ toast("CSV sem linhas de questões."); return; }
-  const header = rows[0].map(mapHeader);
-  if(!header.includes("enunciado")){ toast("Não encontrei a coluna 'enunciado'."); return; }
+function analyzeCSV(text, fallbackProj, fallbackTema){
+  const cleaned = cleanCSVInput(text);
+  if(!cleaned) return { ok:false, msg:"Cole o conteúdo CSV ou escolha um arquivo .csv." };
+  const delim = detectDelim(cleaned);
+  const rows = parseCSV(cleaned, delim);
+  if(rows.length < 2) return { ok:false, msg:"O CSV precisa ter pelo menos a linha de cabeçalho e 1 linha de questão." };
 
-  const defProj = (fallbackProj !== undefined ? fallbackProj : $("#importDefaultProj").value).trim();
-  const defTema = (fallbackTema !== undefined ? fallbackTema : $("#importDefaultTema").value).trim();
-  const existing = new Set(S.questions.map(q => norm(q.enunciado)));
-  let added=0, skipped=0;
+  let headerRowIdx = 0;
+  let header = rows[0].map(mapHeader);
+  for(let idx=0; idx<Math.min(5, rows.length); idx++){
+    const candidate = rows[idx].map(mapHeader);
+    if(candidate.includes("enunciado")){
+      headerRowIdx = idx;
+      header = candidate;
+      break;
+    }
+  }
+  if(!header.includes("enunciado")){
+    const foundCols = rows[0].slice(0, 6).join(", ");
+    return {
+      ok:false,
+      msg:`Não encontrei a coluna "enunciado" no cabeçalho. Colunas lidas na 1ª linha: [${foundCols}].`
+    };
+  }
 
-  for(let r=1;r<rows.length;r++){
-    const obj={}; rows[r].forEach((val,c)=>{ if(header[c]) obj[header[c]] = String(val).trim(); });
-    const enun = obj.enunciado; if(!enun) continue;
-    if(existing.has(norm(enun))){ skipped++; continue; }
+  const hasOptCols = header.some(h => h && h.startsWith("opt_"));
+  const defProj = (fallbackProj !== undefined ? fallbackProj : ($("#importDefaultProj") ? $("#importDefaultProj").value : "")).trim();
+  const defTema = (fallbackTema !== undefined ? fallbackTema : ($("#importDefaultTema") ? $("#importDefaultTema").value : "")).trim();
+
+  const existing = new Set(S.questions.map(q => `${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`));
+  const items = [];
+  let duplicates = 0, invalid = 0;
+  const countsByType = { multipla:0, ce:0, lacuna:0 };
+
+  for(let r = headerRowIdx + 1; r < rows.length; r++){
+    const obj={};
+    rows[r].forEach((val,c)=>{ if(header[c]) obj[header[c]] = String(val ?? "").trim(); });
+    const enun = (obj.enunciado || "").trim();
+    if(!enun) continue;
+
+    const finalProj = defProj || obj.projeto || S.settings.projeto || "Geral";
+    const finalTema = defTema || obj.tema || S.settings.tema || "Geral";
+    const dupKey = `${norm(finalProj)}::${norm(finalTema)}::${norm(enun)}`;
+    if(existing.has(dupKey)){ duplicates++; continue; }
 
     const opcoes=[];
     for(const L of ["a","b","c","d","e"]){ const t=obj["opt_"+L]; if(t) opcoes.push({k:L, t}); }
@@ -1372,10 +1418,22 @@ function importCSV(text, fallbackProj, fallbackTema){
     let tipo = "multipla";
     if(rawTipo.includes("lacuna") || rawTipo.includes("cloze") || rawTipo.includes("aberta") || rawTipo.includes("digitar")){
       tipo = "lacuna";
-    } else if(rawTipo==="ce" || rawTipo.includes("certo") || (opcoes.length===0 && ["certo","errado","c","e","verdadeiro","falso","v","f"].includes(normCor))){
+    } else if(rawTipo==="ce" || rawTipo==="c/e" || rawTipo.includes("certo") || rawTipo.includes("verdadeiro")){
       tipo = "ce";
-    } else if(opcoes.length < 2 && rawCor){
-      tipo = "lacuna";
+    } else if(rawTipo.includes("multipla") || rawTipo==="me"){
+      tipo = "multipla";
+    } else {
+      // Detecção automática inteligente
+      if(opcoes.length >= 2){
+        tipo = "multipla";
+      } else if(opcoes.length === 0 && ["certo","errado","c","e","verdadeiro","falso","v","f"].includes(normCor) && !/_{3,}|\[\.\.\.\]/.test(enun)){
+        tipo = "ce";
+      } else if(opcoes.length === 0 && rawCor && !(hasOptCols && rawCor.length===1 && "abcde".includes(normCor))){
+        tipo = "lacuna";
+      } else {
+        invalid++;
+        continue;
+      }
     }
 
     let finalOpcoes = opcoes;
@@ -1385,39 +1443,95 @@ function importCSV(text, fallbackProj, fallbackTema){
       finalOpcoes = [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}];
       finalCorreta = (normCor.startsWith("c") || normCor.startsWith("v")) ? "c" : "e";
     } else if(tipo === "lacuna"){
-      if(!rawCor){ skipped++; continue; }
+      if(!rawCor){ invalid++; continue; }
       finalOpcoes = [];
       finalCorreta = rawCor;
     } else {
-      if(opcoes.length < 2){ skipped++; continue; }
-      let c = normCor;
+      if(opcoes.length < 2){ invalid++; continue; }
+      let c = normCor.replace(/^[(\[]*([a-e])[)\].]*$/, "$1");
       if(!(c.length===1 && "abcde".includes(c))){
-        const hit = opcoes.find(o => norm(o.t)===c);
+        const hit = opcoes.find(o => norm(o.t)===normCor);
         c = hit ? hit.k : (c[0] && "abcde".includes(c[0]) ? c[0] : opcoes[0].k);
       }
       if(!opcoes.some(o=>o.k===c)) c = opcoes[0].k;
       finalCorreta = c;
     }
 
-    const finalProj = obj.projeto || defProj || S.settings.projeto || "Concurso ABDI";
-    const finalTema = obj.tema || defTema || "Geral";
-    ensureNotebookExists(finalTema, finalProj);
-
-    S.questions.push({
-      id: now().toString(36)+Math.random().toString(36).slice(2,7),
+    countsByType[tipo]++;
+    existing.add(dupKey);
+    items.push({
       enunciado: enun, tipo, opcoes: finalOpcoes, correta: finalCorreta,
       projeto: finalProj, tema: finalTema,
-      dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||"",
+      dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||""
+    });
+  }
+
+  return { ok:true, items, duplicates, invalid, countsByType, defProj, defTema };
+}
+
+function updateImportPreview(){
+  const box = $("#importPreview");
+  if(!box) return;
+  const text = $("#paste") ? $("#paste").value : "";
+  if(!text.trim()){ box.style.display="none"; box.innerHTML=""; return; }
+  const res = analyzeCSV(text);
+  box.style.display="";
+  if(!res.ok){
+    box.style.borderColor = "var(--err)";
+    box.innerHTML = `<span style="color:var(--err);font-weight:700">⚠️ Atenção:</span> ${esc(res.msg)}`;
+    return;
+  }
+  box.style.borderColor = res.items.length ? "var(--ok)" : "var(--warn)";
+  const parts = [];
+  if(res.countsByType.multipla) parts.push(`${res.countsByType.multipla} Múltipla Escolha`);
+  if(res.countsByType.ce) parts.push(`${res.countsByType.ce} Certo/Errado`);
+  if(res.countsByType.lacuna) parts.push(`${res.countsByType.lacuna} Lacuna`);
+  const extra = [];
+  if(res.duplicates) extra.push(`${res.duplicates} já existente(s) no mesmo caderno`);
+  if(res.invalid) extra.push(`${res.invalid} linha(s) incompleta(s)`);
+  box.innerHTML = res.items.length
+    ? `<strong style="color:var(--ok)">✓ Pronto para importar: ${res.items.length} questão(ões) válida(s)</strong> (${parts.join(" • ")})${extra.length ? `<br><span style="font-size:12px">Ignoradas: ${extra.join(", ")}.</span>` : ""}`
+    : `<strong style="color:var(--warn)">⚠️ Nenhuma questão nova para adicionar</strong>${extra.length ? ` (${extra.join(", ")})` : ""}.`;
+}
+
+function importCSV(text, fallbackProj, fallbackTema){
+  const res = analyzeCSV(text, fallbackProj, fallbackTema);
+  if(!res.ok){ toast(res.msg); updateImportPreview(); return; }
+  if(!res.items.length){
+    const reason = res.duplicates ? `Todas as ${res.duplicates} questões já existem neste caderno.` : "Nenhuma questão válida encontrada no CSV.";
+    toast(reason);
+    updateImportPreview();
+    return;
+  }
+
+  const touchedProjects = new Set();
+  const touchedNotebooks = new Set();
+
+  for(const item of res.items){
+    ensureNotebookExists(item.tema, item.projeto);
+    touchedProjects.add(item.projeto);
+    touchedNotebooks.add(`${item.projeto}:::${item.tema}`);
+    S.questions.push({
+      id: now().toString(36)+Math.random().toString(36).slice(2,7),
+      enunciado: item.enunciado, tipo: item.tipo, opcoes: item.opcoes, correta: item.correta,
+      projeto: item.projeto, tema: item.tema,
+      dificuldade: item.dificuldade, explicacao: item.explicacao,
       box:1, due:now(), acertos:0, erros:0, vistas:0, ultima:null
     });
-    existing.add(norm(enun)); added++;
   }
   save();
-  toast(`${added} questão(ões) importada(s)${skipped?` (${skipped} ignoradas)`:""}.`);
-  if(defProj && defTema){
-    openNotebook(defTema, defProj);
-  } else if(defProj){
-    openProject(defProj);
+  if($("#paste")) $("#paste").value = "";
+  if($("#file")) $("#file").value = "";
+  updateImportPreview();
+
+  const skipCount = res.duplicates + res.invalid;
+  toast(`${res.items.length} questão(ões) importada(s)${skipCount?` (${skipCount} ignoradas)`:""}!`);
+
+  if(touchedNotebooks.size === 1){
+    const [p, t] = Array.from(touchedNotebooks)[0].split(":::");
+    openNotebook(t, p);
+  } else if(touchedProjects.size === 1){
+    openProject(Array.from(touchedProjects)[0]);
   } else {
     goProjects();
   }
@@ -1515,28 +1629,6 @@ function renderProjects(){
   $("#prAcc").textContent = `• ${globalAcc}`;
 
   const cards = [];
-
-  if(totalQ > 0 && projs.length > 1){
-    const masteredAll = S.questions.filter(q=>q.box>=3).length;
-    const progAll = Math.round(masteredAll / totalQ * 100);
-    cards.push(`
-      <div class="nb-card all-nb" data-open-proj="">
-        <div class="nb-top">
-          <div class="nb-icon">🌐</div>
-          <span class="nb-badge due">${totalDue} para hoje</span>
-        </div>
-        <div>
-          <h3 class="nb-title">Todos os Projetos</h3>
-          <div class="nb-sub">Visão unificada de todos os seus cadernos (${totalQ} questões)</div>
-        </div>
-        <div class="nb-prog"><i style="width:${progAll}%"></i></div>
-        <div class="nb-badges">
-          <span class="nb-badge">${projs.length} projetos</span>
-          <span class="nb-badge">Acurácia: ${globalAcc}</span>
-        </div>
-      </div>
-    `);
-  }
 
   for(const p of projs){
     const qs = S.questions.filter(q => norm(projOf(q)) === norm(p.name));
@@ -2567,7 +2659,27 @@ function openImportView(prefillProj, prefillTema){
   updateDatalists();
   $("#importDefaultProj").value = prefillProj || "";
   $("#importDefaultTema").value = prefillTema || "";
+  updateImportPreview();
   show("import");
+}
+
+function readCSVFile(file){
+  if(!file) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    let text = "";
+    try{
+      const dec = new TextDecoder("utf-8", { fatal: true });
+      text = dec.decode(fr.result);
+    }catch(e){
+      const decLatin = new TextDecoder("windows-1252");
+      text = decLatin.decode(fr.result);
+    }
+    $("#paste").value = text;
+    updateImportPreview();
+    toast(`Arquivo "${file.name}" carregado. Clique em Importar.`);
+  };
+  fr.readAsArrayBuffer(file);
 }
 
 $("#btnImportTop").addEventListener("click", ()=>openImportView("", ""));
@@ -2582,7 +2694,7 @@ $("#loadSampleBtn").addEventListener("click", ()=>{
 });
 $("#welcomeWikiBtn").addEventListener("click", ()=>show("wiki"));
 $("#goWikiFromImport").addEventListener("click", ()=>show("wiki"));
-$("#pasteSampleBtn").addEventListener("click", ()=>{ $("#paste").value = SAMPLE; toast("Exemplo preenchido. Clique em Importar."); });
+$("#pasteSampleBtn").addEventListener("click", ()=>{ $("#paste").value = SAMPLE; updateImportPreview(); toast("Exemplo preenchido. Clique em Importar."); });
 
 $("#btnNewProject").addEventListener("click", ()=>openProjModal(null));
 $("#projModalCancel").addEventListener("click", closeProjModal);
@@ -2651,10 +2763,13 @@ $("#eqSave").addEventListener("click", saveQuestionModal);
 $("#editModal").addEventListener("click", e=>{ if(e.target===$("#editModal")) closeEditModal(); });
 
 $("#drop").addEventListener("click", ()=>$("#file").click());
-$("#file").addEventListener("change", e=>{ const f=e.target.files[0]; if(f){ const fr=new FileReader(); fr.onload=()=>{ $("#paste").value=fr.result; toast("Arquivo carregado. Clique em Importar."); }; fr.readAsText(f); } });
+$("#file").addEventListener("change", e=>{ const f=e.target.files[0]; if(f){ readCSVFile(f); e.target.value=""; } });
 ["dragover","dragenter"].forEach(ev=>$("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.add("over"); }));
 ["dragleave","drop"].forEach(ev=>$("#drop").addEventListener(ev, e=>{ e.preventDefault(); $("#drop").classList.remove("over"); }));
-$("#drop").addEventListener("drop", e=>{ const f=e.dataTransfer.files[0]; if(f){ const fr=new FileReader(); fr.onload=()=>{ $("#paste").value=fr.result; toast("Arquivo carregado. Clique em Importar."); }; fr.readAsText(f); } });
+$("#drop").addEventListener("drop", e=>{ const f=e.dataTransfer.files[0]; if(f) readCSVFile(f); });
+$("#paste").addEventListener("input", updateImportPreview);
+$("#importDefaultProj").addEventListener("input", updateImportPreview);
+$("#importDefaultTema").addEventListener("input", updateImportPreview);
 $("#doImport").addEventListener("click", ()=>importCSV($("#paste").value));
 $("#dlSample").addEventListener("click", e=>{ e.preventDefault(); downloadSample(); });
 

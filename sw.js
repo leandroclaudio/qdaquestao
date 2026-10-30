@@ -1,4 +1,4 @@
-const CACHE_NAME = "qdequestao-v4";
+const CACHE_NAME = "qdequestao-v5";
 const ASSETS = [
   "./",
   "./index.html",
