@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#4338ca">
-<meta name="description" content="Estudo inteligente por cadernos temáticos de questões com repetição espaçada (Sistema Leitner), simulados cronometrados e estatísticas.">
+<meta name="description" content="Plataforma de estudo ativo por projetos e cadernos temáticos com repetição espaçada (Sistema Leitner), questões de múltipla escolha, certo/errado e lacuna.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
-<title>Q de Questão — Cadernos de Estudo</title>
+<title>Q de Questão — Projetos e Cadernos de Estudo</title>
 <style>
   :root{
     --bg:#f3f2ef;
@@ -53,12 +53,9 @@
     -webkit-font-smoothing:antialiased;line-height:1.5;
     padding-bottom:env(safe-area-inset-bottom);
   }
-  /* container widescreen no desktop */
-  .wrap{max-width:1120px;margin:0 auto;padding:12px 16px 96px;}
-  @media(min-width:768px){
-    .wrap{padding:20px 32px 96px;}
-  }
-  .narrow-wrap{max-width:800px;margin:0 auto}
+  .wrap{max-width:1140px;margin:0 auto;padding:12px 16px 96px;}
+  @media(min-width:768px){ .wrap{padding:22px 32px 96px;} }
+  .narrow-wrap{max-width:820px;margin:0 auto}
 
   /* top bar */
   .bar{
@@ -66,9 +63,7 @@
     backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line);
     padding:max(10px,env(safe-area-inset-top)) 16px 10px;
   }
-  .bar-inner{
-    max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:10px;
-  }
+  .bar-inner{max-width:1140px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   @media(min-width:768px){ .bar{padding-left:32px;padding-right:32px} }
   .bar .brand{font-weight:750;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;cursor:pointer}
   .bar .dot{width:11px;height:11px;border-radius:3.5px;background:var(--accent);transform:rotate(12deg)}
@@ -78,21 +73,22 @@
     color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 25%,var(--line));
     padding:6px 10px;border-radius:99px;
   }
-  @media(min-width:640px){ .save-pill{display:inline-flex} }
+  @media(min-width:680px){ .save-pill{display:inline-flex} }
   .navbtn{
     border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;
-    height:38px;padding:0 12px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    height:38px;padding:0 11px;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
     transition:border-color .15s,transform .08s,background .15s;
   }
   .navbtn:hover{border-color:var(--accent)}
   .navbtn:active{transform:scale(.97)}
   .navbtn .lbl{display:none}
-  @media(min-width:720px){ .navbtn .lbl{display:inline} }
+  @media(min-width:820px){ .navbtn .lbl{display:inline} }
 
   .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
-  h1{font-size:28px;letter-spacing:-.025em;margin:10px 0 4px}
+  h1{font-size:27px;letter-spacing:-.025em;margin:8px 0 4px}
   @media(min-width:768px){ h1{font-size:32px} }
   h2{font-size:18px;letter-spacing:-.01em;margin:0 0 10px}
+  h3{font-size:16px;margin:14px 0 6px}
   p.lead{color:var(--ink-soft);margin:2px 0 20px;font-size:15px}
   .view{display:none;animation:fade .22s ease}
   .view.active{display:block}
@@ -109,12 +105,10 @@
   .stat .num.due{color:var(--accent)}
   .stat .num.streak{color:var(--warn)}
 
-  /* cadernos grid */
+  /* grids para projetos e cadernos */
   .nb-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 16px;flex-wrap:wrap}
   .nb-toolbar input{max-width:340px;flex:1;min-width:200px}
-  .nb-grid{
-    display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:24px;
-  }
+  .nb-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:24px}
   @media(min-width:620px){ .nb-grid{grid-template-columns:repeat(2,1fr)} }
   @media(min-width:960px){ .nb-grid{grid-template-columns:repeat(3,1fr)} }
 
@@ -131,8 +125,8 @@
   }
   .nb-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
   .nb-icon{
-    width:44px;height:44px;border-radius:13px;background:var(--accent-soft);color:var(--accent);
-    display:grid;place-items:center;font-size:21px;flex:none;font-weight:700;
+    width:46px;height:46px;border-radius:13px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:22px;flex:none;font-weight:700;
   }
   .nb-actions{display:flex;gap:4px}
   .nb-act{
@@ -151,11 +145,12 @@
   .nb-prog{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:2px}
   .nb-prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
 
-  /* interior do caderno (2 colunas no desktop) */
+  /* breadcrumbs */
+  .crumb-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
   .crumb{
-    display:inline-flex;align-items:center;gap:8px;font-weight:650;font-size:14px;
+    display:inline-flex;align-items:center;gap:6px;font-weight:650;font-size:13.5px;
     color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));
-    padding:7px 13px;border-radius:99px;cursor:pointer;margin-bottom:10px;
+    padding:6px 13px;border-radius:99px;cursor:pointer;
   }
   .crumb:hover{opacity:.9}
   .nb-layout{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
@@ -163,8 +158,8 @@
 
   /* cards */
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:0 0 16px}
-  /* dificuldade chips */
-  .temas{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 14px;padding:2px 0 6px;scrollbar-width:none}
+  /* chips */
+  .temas{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 10px;padding:2px 0 6px;scrollbar-width:none}
   .temas::-webkit-scrollbar{display:none}
   .chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-weight:600;font-size:13px;padding:7px 14px;border-radius:99px;cursor:pointer;white-space:nowrap;transition:.12s}
   .chip.sm{font-size:12.5px;padding:6px 12px}
@@ -178,7 +173,7 @@
     border-radius:20px;padding:24px;margin-bottom:22px;box-shadow:var(--shadow);
   }
   .welcome-card h2{margin:0 0 6px;font-size:20px}
-  .welcome-card p{margin:0 0 16px;font-size:14.5px;color:var(--ink-soft);max-width:680px}
+  .welcome-card p{margin:0 0 16px;font-size:14.5px;color:var(--ink-soft);max-width:700px}
 
   /* mode buttons */
   .modes{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
@@ -210,6 +205,15 @@
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .row .btn{flex:1;min-width:140px}
 
+  /* icon picker */
+  .icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:6px 0 10px}
+  .ic-pick{
+    height:38px;border:1.5px solid var(--line);background:var(--surface-2);border-radius:10px;
+    font-size:18px;cursor:pointer;display:grid;place-items:center;transition:.12s;
+  }
+  .ic-pick:hover{border-color:var(--accent)}
+  .ic-pick.on{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.06)}
+
   /* quiz */
   .quiz-card{
     background:var(--surface);border:1px solid var(--line);border-radius:20px;
@@ -229,6 +233,11 @@
   .tag.dif-hard{color:var(--err);background:var(--err-soft);border-color:color-mix(in srgb,var(--err) 30%,var(--line))}
   .enun{font-size:19px;font-weight:650;letter-spacing:-.01em;margin:6px 0 22px;line-height:1.45;white-space:pre-line}
   @media(min-width:768px){ .enun{font-size:21px} }
+  .blank-slot{
+    display:inline-block;min-width:90px;padding:0 10px;margin:0 3px;
+    border-bottom:2.5px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+    border-radius:6px 6px 0 0;font-family:var(--mono);font-size:.9em;text-align:center;
+  }
   .opts{display:flex;flex-direction:column;gap:10px}
   .opt-wrap{display:flex;align-items:stretch;gap:8px}
   .opt{
@@ -256,11 +265,22 @@
   }
   .elim-btn:hover{border-color:var(--accent);color:var(--ink)}
   .elim-btn.on{background:var(--surface-2);color:var(--err);border-color:var(--err)}
+
+  /* lacuna input box */
+  .lacuna-box{display:flex;flex-direction:column;gap:8px}
+  .lacuna-input{
+    width:100%;border:2px solid var(--line);border-radius:14px;padding:15px 16px;
+    font-size:17px;font-weight:600;background:var(--surface-2);color:var(--ink);transition:.15s;
+  }
+  .lacuna-input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+  .lacuna-input.correct{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .lacuna-input.wrong{border-color:var(--err);background:var(--err-soft);color:var(--err)}
+
   .kbd-hint{font:500 12px/1.4 var(--mono);color:var(--ink-soft);text-align:center;margin-top:16px;opacity:.85}
   @media (pointer:coarse){.kbd-hint{display:none}}
   .feedback{margin-top:18px;border-radius:14px;padding:16px;border:1px solid var(--line);background:var(--surface-2);display:none}
   .feedback.show{display:block}
-  .feedback .verdict{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:15.5px}
+  .feedback .verdict{font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:15.5px;flex-wrap:wrap}
   .feedback.ok .verdict{color:var(--ok)}
   .feedback.no .verdict{color:var(--err)}
   .feedback .exp{font-size:14.5px;color:var(--ink-soft);line-height:1.55}
@@ -269,9 +289,9 @@
   .dock{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
     background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:none}
   .dock.show{display:block}
-  .dock .inner{max-width:800px;margin:0 auto}
+  .dock .inner{max-width:820px;margin:0 auto}
 
-  /* stats view */
+  /* stats & wiki */
   .stats-grid{display:grid;grid-template-columns:1fr;gap:16px}
   @media(min-width:820px){ .stats-grid{grid-template-columns:repeat(2,1fr)} }
   .tema-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -283,6 +303,20 @@
   .minibar i{display:block;height:100%;background:var(--ok)}
   .minibar.accent i{background:var(--accent)}
 
+  /* wiki styles */
+  .wiki-table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  .wiki-table th,.wiki-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  .wiki-table th{background:var(--surface-2);font-weight:700}
+  .wiki-pre{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;font:500 12.5px/1.5 var(--mono);overflow-x:auto;white-space:pre-wrap;color:var(--ink);
+  }
+  .leitner-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+  .l-step{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .l-step .bx{font:700 12px/1 var(--mono);color:var(--accent);text-transform:uppercase}
+  .l-step .dy{font-size:20px;font-weight:800;margin:6px 0 2px}
+  .l-step .ds{font-size:12px;color:var(--ink-soft)}
+
   /* week activity */
   .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px;text-align:center}
   .day-col{display:flex;flex-direction:column;align-items:center;gap:6px}
@@ -292,13 +326,13 @@
   .day-val{font:700 11.5px/1 var(--mono);color:var(--ink)}
 
   /* import & inputs */
-  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:28px 16px;text-align:center;color:var(--ink-soft);cursor:pointer;background:var(--surface-2);transition:.15s}
+  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:26px 16px;text-align:center;color:var(--ink-soft);cursor:pointer;background:var(--surface-2);transition:.15s}
   .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   textarea,input[type="text"],select{
     width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;
     font-family:var(--sans);font-size:14px;background:var(--surface);color:var(--ink);
   }
-  textarea{min-height:120px;font-family:var(--mono);font-size:13px;resize:vertical}
+  textarea{min-height:110px;font-family:var(--mono);font-size:13px;resize:vertical}
   textarea:focus,input[type="text"]:focus,select:focus{outline:none;border-color:var(--accent)}
   .hint{font-size:13.5px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
   code{font-family:var(--mono);font-size:12.5px;background:var(--accent-soft);color:var(--accent);padding:2px 6px;border-radius:6px}
@@ -326,7 +360,7 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
   .modal.show{display:flex;animation:fade .15s ease}
-  .modal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
+  .modal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;max-width:500px;width:100%;max-height:92vh;overflow-y:auto}
   .modal-msg{font-size:15.5px;font-weight:600;line-height:1.45;margin-bottom:18px}
   .modal-actions{display:flex;gap:10px;margin-top:16px}
   .modal-actions .btn{flex:1}
@@ -348,7 +382,7 @@
   /* question manager */
   .q-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
   .q-toolbar input{flex:1;min-width:200px}
-  .q-toolbar select{width:auto;min-width:160px}
+  .q-toolbar select{width:auto;min-width:150px}
   .q-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px}
   @media(min-width:820px){ .q-grid{grid-template-columns:repeat(2,1fr)} }
   .q-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between}
@@ -365,58 +399,85 @@
 <div class="bar">
   <div class="bar-inner">
     <span class="brand" id="brand"><span class="dot"></span>Q de Questão</span>
-    <span class="save-pill" id="saveStatus" title="Suas questões ficam salvas automaticamente na memória permanente deste navegador">💾 Salvo na memória</span>
+    <span class="save-pill" id="saveStatus" title="Salvo automaticamente na memória permanente deste navegador">💾 Salvo na memória</span>
     <span class="spacer"></span>
-    <button class="navbtn" id="navNotebooks" title="Meus Cadernos">📚 <span class="lbl">Cadernos</span></button>
+    <button class="navbtn" id="navProjects" title="Meus Projetos">🏛️ <span class="lbl">Projetos</span></button>
     <button class="navbtn" id="navManage" title="Banco de Questões">🗂️ <span class="lbl">Questões</span></button>
     <button class="navbtn" id="navStats" title="Estatísticas">📊 <span class="lbl">Estatísticas</span></button>
+    <button class="navbtn" id="navWiki" title="Guia e Wiki do App">📖 <span class="lbl">Como Funciona</span></button>
     <button class="navbtn" id="navSettings" title="Ajustes">⚙️ <span class="lbl">Ajustes</span></button>
   </div>
 </div>
 
 <div class="wrap">
 
-  <!-- TELA INICIAL: CADERNOS TEMÁTICOS -->
-  <section id="notebooks" class="view active">
+  <!-- NÍVEL 1: TELA INICIAL DE PROJETOS -->
+  <section id="projects" class="view active">
     <div class="hero-head">
       <div>
-        <span class="eyebrow">Estudo Organizado</span>
-        <h1>Meus Cadernos Temáticos</h1>
-        <p class="lead" style="margin-bottom:0">Escolha um caderno de estudos para praticar ou crie novos cadernos por matéria.</p>
+        <span class="eyebrow">Organização de Estudos</span>
+        <h1>Meus Projetos</h1>
+        <p class="lead" style="margin-bottom:0">Crie projetos para cada objetivo (ex.: Concurso ABDI, Certificação, Pós) e organize seus cadernos lá dentro.</p>
       </div>
       <div class="hero-actions">
-        <button class="btn auto ghost" id="btnNewNotebook">📁 ＋ Novo Caderno</button>
+        <button class="btn auto ghost" id="btnNewProject">🏛️ ＋ Novo Projeto</button>
+        <button class="btn auto ghost" id="btnQuickNewQ">✍️ ＋ Nova Questão</button>
         <button class="btn auto" id="btnImportTop">📄 ＋ Importar CSV</button>
       </div>
     </div>
 
     <div class="welcome-card" id="emptyWelcome" style="display:none">
-      <h2>👋 Bem-vindo ao seu Banco de Questões!</h2>
-      <p>Todas as questões e cadernos que você adicionar ficam <strong>salvos automaticamente na memória deste navegador</strong>. Para experimentar agora mesmo, carregue os cadernos de exemplo com 1 clique ou importe seu próprio arquivo CSV.</p>
-      <div class="row" style="max-width:460px">
-        <button class="btn" id="loadSampleBtn">✨ Carregar cadernos de exemplo</button>
-        <button class="btn ghost" id="welcomeImportBtn">📄 Importar meu CSV</button>
+      <h2>👋 Bem-vindo ao Q de Questão!</h2>
+      <p>Organize seus estudos em <strong>Projetos → Cadernos Temáticos → Questões</strong> (Múltipla Escolha, Certo/Errado e Preencher Lacuna). Tudo fica salvo automaticamente na memória do seu navegador. Quer ver funcionando agora?</p>
+      <div class="row" style="max-width:560px">
+        <button class="btn" id="loadSampleBtn">✨ Carregar Projeto "Concurso ABDI" (Exemplo)</button>
+        <button class="btn ghost" id="welcomeWikiBtn">📖 Ler como o App funciona</button>
       </div>
     </div>
 
     <div class="stats-row">
-      <div class="stat"><div class="num" id="nbCount">0</div><div class="lab">Cadernos</div></div>
-      <div class="stat"><div class="num due" id="nbDue">0</div><div class="lab">Para revisar hoje</div></div>
-      <div class="stat"><div class="num" id="nbTotalQ">0</div><div class="lab">Total de questões</div></div>
-      <div class="stat"><div class="num streak" id="nbStreak">0d 🔥</div><div class="lab">Ofensiva / Acurácia <span id="nbAcc">—</span></div></div>
+      <div class="stat"><div class="num" id="prCount">0</div><div class="lab">Projetos ativos</div></div>
+      <div class="stat"><div class="num due" id="prDue">0</div><div class="lab">Para revisar hoje</div></div>
+      <div class="stat"><div class="num" id="prTotalQ">0</div><div class="lab">Total de questões</div></div>
+      <div class="stat"><div class="num streak" id="prStreak">0d 🔥</div><div class="lab">Ofensiva / Acurácia <span id="prAcc">—</span></div></div>
+    </div>
+
+    <div class="nb-grid" id="prGrid"></div>
+  </section>
+
+  <!-- NÍVEL 2: CADERNOS DENTRO DO PROJETO -->
+  <section id="notebooks" class="view">
+    <div class="crumb-bar">
+      <button class="crumb" id="backToProjects">← Meus Projetos</button>
+    </div>
+    <div class="hero-head">
+      <div>
+        <span class="eyebrow" id="curProjEyebrow">Projeto</span>
+        <h1 id="curProjTitle">Concurso ABDI</h1>
+        <p class="lead" id="curProjDesc" style="margin-bottom:0">Escolha um caderno temático para estudar ou faça um simulado geral deste projeto.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn auto ghost" id="btnNewNotebook">📁 ＋ Novo Caderno</button>
+        <button class="btn auto ghost" id="btnImportProj">📄 ＋ Importar CSV</button>
+        <button class="btn auto" id="btnProjSimulado">⏱ Simulado do Projeto</button>
+      </div>
     </div>
 
     <div class="nb-toolbar" id="nbToolbar">
       <input type="text" id="nbSearch" placeholder="🔍 Filtrar caderno por nome...">
-      <button class="btn sm ghost" id="btnNewQFromNb">＋ Criar questão avulsa</button>
+      <button class="btn sm ghost" id="btnNewQFromNb">＋ Nova questão neste projeto</button>
     </div>
 
     <div class="nb-grid" id="nbGrid"></div>
   </section>
 
-  <!-- INTERIOR DO CADERNO SELECIONADO -->
+  <!-- NÍVEL 3: INTERIOR DO CADERNO SELECIONADO -->
   <section id="home" class="view">
-    <button class="crumb" id="backToNotebooks">← Voltar para Meus Cadernos</button>
+    <div class="crumb-bar">
+      <button class="crumb" id="crumbProjects">🏛️ Projetos</button>
+      <span style="color:var(--ink-soft)">›</span>
+      <button class="crumb" id="backToNotebooks">📂 Cadernos do Projeto</button>
+    </div>
     <div class="hero-head" style="margin-bottom:10px">
       <div>
         <span class="eyebrow" id="curNbEyebrow">Caderno Temático</span>
@@ -430,6 +491,7 @@
       </div>
     </div>
 
+    <div class="temas" id="tiposFilter" style="display:none"></div>
     <div class="temas" id="difs" style="display:none"></div>
 
     <div class="nb-layout">
@@ -487,11 +549,14 @@
         <div class="enun" id="enun"></div>
         <div class="opts" id="opts"></div>
         <div class="feedback" id="feedback">
-          <div class="verdict" id="verdict"></div>
+          <div class="verdict">
+            <span id="verdict"></span>
+            <button class="mini-btn" id="overrideOkBtn" style="display:none">✓ Considerar minha resposta correta</button>
+          </div>
           <div class="exp" id="exp"></div>
         </div>
       </div>
-      <div class="kbd-hint">Atalhos: <strong>A–E</strong> ou <strong>1–5</strong> seleciona • <strong>Enter</strong> confirma • <strong>✂</strong> (ou botão direito) risca opção</div>
+      <div class="kbd-hint" id="kbdHint">Atalhos: <strong>A–E</strong> ou <strong>1–5</strong> seleciona • <strong>Enter</strong> confirma • <strong>✂</strong> (ou botão direito) risca opção</div>
     </div>
   </section>
 
@@ -513,7 +578,7 @@
       <div class="row">
         <button class="btn ghost" id="resRetryWrong" style="display:none">↺ Refazer erradas</button>
         <button class="btn ghost" id="resBackNotebook">📂 Voltar ao caderno</button>
-        <button class="btn" id="resHome">📚 Todos os cadernos</button>
+        <button class="btn" id="resHome">🏛️ Meus Projetos</button>
       </div>
     </div>
   </section>
@@ -523,11 +588,20 @@
     <div class="narrow-wrap">
       <span class="eyebrow">Importar</span>
       <h1>Adicionar questões via CSV</h1>
-      <p class="lead">As questões importadas ficam salvas automaticamente na memória do seu navegador e organizadas em seus cadernos temáticos.</p>
+      <p class="lead">Suporta questões de <strong>Múltipla Escolha</strong>, <strong>Certo/Errado</strong> e <strong>Preencher Lacuna</strong> no mesmo arquivo.</p>
 
       <div class="card">
-        <label class="field" style="margin-top:0">Caderno de destino (opcional)</label>
-        <input type="text" id="importDefaultTema" list="notebookDatalist" placeholder="Deixe em branco para usar a coluna 'tema' do CSV ou digite o nome do caderno...">
+        <div class="row">
+          <div style="flex:1;min-width:200px">
+            <label class="field" style="margin-top:0">Projeto de destino (opcional)</label>
+            <input type="text" id="importDefaultProj" list="projectDatalist" placeholder="Usa coluna 'projeto' do CSV ou digite aqui...">
+          </div>
+          <div style="flex:1;min-width:200px">
+            <label class="field" style="margin-top:0">Caderno de destino (opcional)</label>
+            <input type="text" id="importDefaultTema" list="notebookDatalist" placeholder="Usa coluna 'tema' do CSV ou digite aqui...">
+          </div>
+        </div>
+        <datalist id="projectDatalist"></datalist>
         <datalist id="notebookDatalist"></datalist>
 
         <label class="field">Arquivo CSV</label>
@@ -538,20 +612,21 @@
         <input type="file" id="file" accept=".csv,text/csv" hidden>
 
         <label class="field">ou cole o conteúdo CSV aqui</label>
-        <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,tema,dificuldade,explicacao&#10;Quanto é 2+2?,3,4,5,6,b,Matemática,Fácil,Soma simples."></textarea>
+        <textarea id="paste" placeholder="enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao"></textarea>
         <div style="height:12px"></div>
         <div class="row">
           <button class="btn" id="doImport">Importar e salvar na memória</button>
-          <button class="btn ghost" id="pasteSampleBtn">Preencher exemplo</button>
+          <button class="btn ghost" id="pasteSampleBtn">Preencher exemplo completo</button>
         </div>
       </div>
 
       <div class="hint">
-        <strong>Formato esperado</strong><br>
-        Primeira linha é o cabeçalho. Colunas aceitas: <code>enunciado</code>, <code>a</code> a <code>e</code> (alternativas),
-        <code>correta</code> (letra ou texto da resposta), <code>tema</code> (nome do Caderno), <code>dificuldade</code> e <code>explicacao</code>.
-        Separador <code>,</code>, <code>;</code> ou <code>Tab</code> é detectado automaticamente.
-        <div style="margin-top:8px"><a class="link" id="dlSample">⬇️ Baixar CSV de exemplo</a></div>
+        <strong>Dúvidas sobre o formato do CSV?</strong><br>
+        Você pode importar questões de múltipla escolha, certo/errado e lacuna juntas.
+        <div style="margin-top:8px;display:flex;gap:14px;flex-wrap:wrap">
+          <a class="link" id="dlSample">⬇️ Baixar CSV de exemplo</a>
+          <a class="link" id="goWikiFromImport">📖 Ver tabela completa na Wiki do App</a>
+        </div>
       </div>
       <button class="btn ghost" id="impBack">Voltar</button>
     </div>
@@ -569,7 +644,14 @@
     </div>
     <div class="q-toolbar">
       <input type="text" id="qSearch" placeholder="🔍 Buscar no enunciado ou explicação...">
+      <select id="qFilterProj"><option value="">Todos os projetos</option></select>
       <select id="qFilterTema"><option value="">Todos os cadernos</option></select>
+      <select id="qFilterTipo">
+        <option value="">Todos os tipos</option>
+        <option value="multipla">Múltipla Escolha</option>
+        <option value="ce">Certo / Errado</option>
+        <option value="lacuna">Preencher Lacuna</option>
+      </select>
     </div>
     <div class="q-grid" id="qList"></div>
     <button class="btn ghost" id="manBack" style="max-width:240px">Voltar</button>
@@ -603,6 +685,132 @@
       <div id="temaList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
     </div>
     <button class="btn ghost" id="stBack" style="max-width:240px">Voltar</button>
+  </section>
+
+  <!-- WIKI / GUIA DO APP -->
+  <section id="wiki" class="view">
+    <span class="eyebrow">Documentação Interativa</span>
+    <h1>📖 Como funciona o Q de Questão</h1>
+    <p class="lead">Guia rápido sobre a organização por Projetos e Cadernos, cálculo das datas de revisão espaçada (Sistema de Leitner) e estrutura do CSV.</p>
+
+    <div class="stats-grid">
+      <div class="card">
+        <h2>1. Hierarquia: Projetos → Cadernos → Questões</h2>
+        <p style="font-size:14px;color:var(--ink-soft)">O aplicativo organiza seus estudos em 3 níveis pensados para preparação de alto rendimento:</p>
+        <ul style="font-size:14px;padding-left:18px;margin:8px 0">
+          <li><strong>🏛️ Projetos:</strong> Seu objetivo maior (ex.: <em>Concurso ABDI</em>, <em>Residência</em>, <em>Certificação AWS</em>). Permite isolar matérias de provas diferentes ou rodar um <strong>Simulado Geral do Projeto</strong>.</li>
+          <li><strong>📚 Cadernos Temáticos:</strong> As disciplinas ou tópicos do edital dentro daquele projeto (ex.: <em>Estatística</em>, <em>LGPD</em>, <em>Python</em>). Você pode escolher um <strong>ícone exclusivo</strong> ao criar cada projeto ou caderno.</li>
+          <li><strong>✍️ Questões:</strong> Suporta 3 formatos combinados dentro do mesmo caderno:
+            <ul>
+              <li><strong>Múltipla Escolha (A–E):</strong> De 2 a 5 opções, com botão <code>✂</code> para riscar alternativas descartadas.</li>
+              <li><strong>Certo ou Errado:</strong> Ideal para bancas como Cebraspe.</li>
+              <li><strong>Preencher Lacuna (Digitar):</strong> Você digita a resposta no teclado. Ignora maiúsculas/minúsculas e acentos, e aceita sinônimos separados por <code>|</code>.</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>2. Como funcionam as Datas de Revisão (Sistema de Leitner)</h2>
+        <p style="font-size:14px;color:var(--ink-soft)">Cada questão possui uma <strong>Caixa de 1 a 5</strong> e um carimbo de data/hora da próxima revisão (<code>Para hoje</code>):</p>
+        <div class="leitner-steps">
+          <div class="l-step"><div class="bx">Caixa 1</div><div class="dy">+1 dia</div><div class="ds">Novas ou erradas</div></div>
+          <div class="l-step"><div class="bx">Caixa 2</div><div class="dy">+3 dias</div><div class="ds">2º acerto</div></div>
+          <div class="l-step"><div class="bx">Caixa 3</div><div class="dy">+7 dias</div><div class="ds">3º acerto</div></div>
+          <div class="l-step"><div class="bx">Caixa 4</div><div class="dy">+16 dias</div><div class="ds">4º acerto</div></div>
+          <div class="l-step"><div class="bx">Caixa 5 ⭐</div><div class="dy">+35 dias</div><div class="ds">Dominada!</div></div>
+        </div>
+        <ul style="font-size:13.5px;padding-left:18px;color:var(--ink-soft);margin:8px 0 0">
+          <li><strong>Ao importar/criar uma questão:</strong> Ela entra na <strong>Caixa 1</strong> com vencimento imediato (aparece em <em>Para hoje</em>).</li>
+          <li><strong>Ao ACERTAR a questão:</strong> Ela sobe 1 caixa (ex.: Caixa 1 → Caixa 2) e sua próxima aparição no modo <em>Revisão inteligente</em> é agendada para <code>hoje + dias da nova caixa</code>.</li>
+          <li><strong>Ao ERRAR a questão:</strong> Ela volta imediatamente para a <strong>Caixa 1</strong> com vencimento para o mesmo dia, garantindo que você revise o ponto fraco até fixar.</li>
+          <li><em>Dica:</em> Você pode personalizar os dias de cada caixa em <strong>⚙️ Ajustes</strong>!</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Estrutura do Arquivo CSV (Importação em Massa)</h2>
+      <p style="font-size:14px;color:var(--ink-soft)">A primeira linha do seu CSV deve ser o cabeçalho. O separador (<code>,</code>, <code>;</code> ou <code>Tab</code>) é detectado automaticamente.</p>
+      <div style="overflow-x:auto">
+        <table class="wiki-table">
+          <thead>
+            <tr>
+              <th>Coluna</th>
+              <th>Obrigatória?</th>
+              <th>Como preencher em cada tipo de questão</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>enunciado</code></td>
+              <td><strong>Sim</strong></td>
+              <td>Texto da pergunta. Nas questões de lacuna, use <code>___</code> (três sublinhados) onde quiser destacar o espaço em branco.</td>
+            </tr>
+            <tr>
+              <td><code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>, <code>e</code></td>
+              <td>Só em Múltipla Escolha</td>
+              <td>Texto de cada alternativa. Em questões de <strong>Lacuna</strong> ou <strong>Certo/Errado</strong>, deixe essas colunas vazias!</td>
+            </tr>
+            <tr>
+              <td><code>correta</code></td>
+              <td><strong>Sim</strong></td>
+              <td>
+                • <strong>Múltipla Escolha:</strong> letra da resposta (<code>a</code>, <code>b</code>, <code>c</code>, <code>d</code> ou <code>e</code>).<br>
+                • <strong>Certo/Errado:</strong> escreva <code>Certo</code> ou <code>Errado</code>.<br>
+                • <strong>Lacuna:</strong> escreva a resposta esperada. Para aceitar mais de uma resposta/sinônimo, separe com barra vertical <code>|</code> (ex.: <code>LGPD | Lei 13.709</code>).
+              </td>
+            </tr>
+            <tr>
+              <td><code>projeto</code></td>
+              <td>Opcional</td>
+              <td>Nome do Projeto (ex.: <code>Concurso ABDI</code>). Se omitido, usa o projeto selecionado na tela de importação.</td>
+            </tr>
+            <tr>
+              <td><code>tema</code></td>
+              <td>Opcional</td>
+              <td>Nome do Caderno Temático (ex.: <code>Estatística</code>, <code>LGPD</code>).</td>
+            </tr>
+            <tr>
+              <td><code>tipo</code></td>
+              <td>Opcional</td>
+              <td><code>multipla</code>, <code>ce</code> (Certo/Errado) ou <code>lacuna</code>. (Se omitido, o app detecta sozinho pelas colunas preenchidas!)</td>
+            </tr>
+            <tr>
+              <td><code>dificuldade</code></td>
+              <td>Opcional</td>
+              <td><code>Fácil</code>, <code>Média</code> ou <code>Difícil</code>.</td>
+            </tr>
+            <tr>
+              <td><code>explicacao</code></td>
+              <td>Opcional</td>
+              <td>Gabarito comentado exibido após responder a questão.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Exemplo prático com os 3 tipos de questão no mesmo CSV:</h3>
+      <div class="wiki-pre">enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
+"O que a mediana representa?","A média","O valor central","A moda","A amplitude",b,Concurso ABDI,Estatística,multipla,Fácil,"Divide os dados ordenados ao meio."
+"A ___ é a lei brasileira (13.709/2018) de proteção de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,LGPD,lacuna,Fácil,"A LGPD regula o tratamento de dados no Brasil."
+"Na LGPD, dados sensíveis dispensam base legal quando tratados pelo poder público.",,,,,Errado,Concurso ABDI,LGPD,ce,Média,"Errado. O poder público deve observar o art. 11 da LGPD."</div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px">
+        <h3 style="margin:0">🤖 Prompt pronto para gerar questões via IA (ChatGPT / Claude / Gemini)</h3>
+        <button class="btn sm" id="copyPromptBtn">📋 Copiar Prompt para IA</button>
+      </div>
+      <div class="wiki-pre" id="aiPromptText" style="margin-top:8px">Crie 15 questões de estudo sobre [INSIRA O TEMA OU EDITAL AQUI] para o projeto "[NOME DO PROJETO]" em formato CSV.
+Use exatamente este cabeçalho na primeira linha:
+enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
+
+Regras:
+1. Misture questões dos tipos: "multipla" (4 alternativas a..d), "ce" (Certo/Errado, deixando a..d vazias e colocando Certo ou Errado em correta) e "lacuna" (use ___ no enunciado, deixe a..d vazias e coloque a resposta curta em correta; se houver sinônimos, separe com | ).
+2. Envolva todos os textos entre aspas duplas ("...").
+3. Retorne apenas o bloco CSV puro pronto para copiar.</div>
+    </div>
+
+    <button class="btn ghost" id="wikiBack" style="max-width:240px">Voltar</button>
   </section>
 
   <!-- SETTINGS -->
@@ -639,7 +847,7 @@
 
         <div class="card">
           <h2>Memória e Backup (Netlify / Local)</h2>
-          <p class="lead" style="margin-bottom:12px">Suas questões são gravadas automaticamente no <strong>armazenamento permanente deste navegador</strong> (LocalStorage + IndexedDB). Use os botões abaixo para exportar uma cópia de segurança ou transferir seus cadernos para outro computador/celular.</p>
+          <p class="lead" style="margin-bottom:12px">Suas questões são gravadas automaticamente no <strong>armazenamento permanente deste navegador</strong> (LocalStorage + IndexedDB). Exporte um backup JSON quando quiser levar seus projetos para outro dispositivo.</p>
           <div class="row" style="margin-bottom:10px">
             <button class="btn ghost" id="expData">⬇️ Exportar Backup (.json)</button>
             <button class="btn ghost" id="impData">⬆️ Restaurar Backup (.json)</button>
@@ -666,7 +874,7 @@
 
         <div class="card">
           <h2>Zona de perigo</h2>
-          <p class="lead" style="margin-bottom:12px">Remove todos os cadernos, questões e o histórico deste navegador.</p>
+          <p class="lead" style="margin-bottom:12px">Remove todos os projetos, cadernos, questões e o histórico deste navegador.</p>
           <button class="btn danger" id="clearAll">Apagar tudo</button>
         </div>
       </div>
@@ -690,12 +898,47 @@
   </div>
 </div>
 
-<!-- NOVO / RENOMEAR CADERNO MODAL -->
+<!-- NOVO / EDITAR PROJETO MODAL -->
+<div class="modal" id="projModal">
+  <div class="modal-card">
+    <h2 id="projModalTitle">Novo Projeto</h2>
+    <label class="field">Nome do Projeto *</label>
+    <input type="text" id="projNameInput" placeholder="Ex.: Concurso ABDI, Certificação, Pós-Graduação...">
+
+    <label class="field">Descrição ou Meta (opcional)</label>
+    <input type="text" id="projDescInput" placeholder="Ex.: Edital 2026 • Foco em TI e Políticas Públicas">
+
+    <label class="field">Escolha o Ícone do Projeto</label>
+    <div class="icon-grid" id="projIconGrid"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:var(--ink-soft)">Ícone selecionado:</span>
+      <input type="text" id="projIconInput" style="width:70px;text-align:center;font-size:18px" maxlength="4" value="🏛️">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="projModalCancel">Cancelar</button>
+      <button class="btn" id="projModalSave">Salvar Projeto</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOVO / EDITAR CADERNO MODAL -->
 <div class="modal" id="nbModal">
   <div class="modal-card">
     <h2 id="nbModalTitle">Novo Caderno Temático</h2>
-    <label class="field">Nome do Caderno *</label>
-    <input type="text" id="nbNameInput" placeholder="Ex.: Direito Constitucional, Python, Estatística...">
+    <label class="field">Projeto *</label>
+    <input type="text" id="nbProjInput" list="projectDatalist" placeholder="Ex.: Concurso ABDI">
+
+    <label class="field">Nome do Caderno (Disciplina / Assunto) *</label>
+    <input type="text" id="nbNameInput" placeholder="Ex.: Estatística, LGPD, Python, Direito Administrativo...">
+
+    <label class="field">Escolha o Ícone do Caderno</label>
+    <div class="icon-grid" id="nbIconGrid"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:var(--ink-soft)">Ícone selecionado:</span>
+      <input type="text" id="nbIconInput" style="width:70px;text-align:center;font-size:18px" maxlength="4" value="📘">
+    </div>
+
     <div class="modal-actions">
       <button class="btn ghost" id="nbModalCancel">Cancelar</button>
       <button class="btn" id="nbModalSave">Salvar Caderno</button>
@@ -707,42 +950,71 @@
 <div class="modal" id="editModal">
   <div class="modal-card">
     <h2 id="editModalTitle">Nova questão</h2>
-    <label class="field">Caderno Temático (Disciplina / Assunto)</label>
-    <input type="text" id="eqTema" list="notebookDatalist" placeholder="Ex.: Estatística, Python, Políticas Públicas...">
+
+    <label class="field" style="margin-top:0">Tipo de Questão</label>
+    <div class="seg" id="eqTipoSeg">
+      <button type="button" data-tipo="multipla" class="on">Múltipla Escolha</button>
+      <button type="button" data-tipo="ce">Certo / Errado</button>
+      <button type="button" data-tipo="lacuna">Lacuna (Digitar)</button>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <div style="flex:1">
+        <label class="field">Projeto</label>
+        <input type="text" id="eqProj" list="projectDatalist" placeholder="Ex.: Concurso ABDI">
+      </div>
+      <div style="flex:1">
+        <label class="field">Caderno Temático</label>
+        <input type="text" id="eqTema" list="notebookDatalist" placeholder="Ex.: Estatística, LGPD...">
+      </div>
+    </div>
 
     <label class="field">Enunciado *</label>
-    <textarea id="eqEnun" style="min-height:76px;font-family:var(--sans)" placeholder="Digite a pergunta..."></textarea>
+    <textarea id="eqEnun" style="min-height:76px;font-family:var(--sans)" placeholder="Digite a pergunta... (Em questão de lacuna, você pode usar ___ para indicar o espaço em branco)"></textarea>
 
-    <label class="field">Alternativas (mínimo A e B) *</label>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <input type="text" id="eqA" placeholder="Alternativa A *">
-      <input type="text" id="eqB" placeholder="Alternativa B *">
-      <input type="text" id="eqC" placeholder="Alternativa C (opcional)">
-      <input type="text" id="eqD" placeholder="Alternativa D (opcional)">
-      <input type="text" id="eqE" placeholder="Alternativa E (opcional)">
+    <!-- Campos Múltipla Escolha -->
+    <div id="eqMultiplaBox">
+      <label class="field">Alternativas (mínimo A e B) *</label>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input type="text" id="eqA" placeholder="Alternativa A *">
+        <input type="text" id="eqB" placeholder="Alternativa B *">
+        <input type="text" id="eqC" placeholder="Alternativa C (opcional)">
+        <input type="text" id="eqD" placeholder="Alternativa D (opcional)">
+        <input type="text" id="eqE" placeholder="Alternativa E (opcional)">
+      </div>
+      <label class="field">Alternativa Correta</label>
+      <select id="eqCorreta">
+        <option value="a">Alternativa A</option>
+        <option value="b">Alternativa B</option>
+        <option value="c">Alternativa C</option>
+        <option value="d">Alternativa D</option>
+        <option value="e">Alternativa E</option>
+      </select>
     </div>
 
-    <div class="row" style="margin-top:8px">
-      <div style="flex:1">
-        <label class="field">Correta</label>
-        <select id="eqCorreta">
-          <option value="a">Alternativa A</option>
-          <option value="b">Alternativa B</option>
-          <option value="c">Alternativa C</option>
-          <option value="d">Alternativa D</option>
-          <option value="e">Alternativa E</option>
-        </select>
-      </div>
-      <div style="flex:1">
-        <label class="field">Dificuldade</label>
-        <select id="eqDif">
-          <option value="">Sem classificação</option>
-          <option value="Fácil">Fácil</option>
-          <option value="Média">Média</option>
-          <option value="Difícil">Difícil</option>
-        </select>
-      </div>
+    <!-- Campos Certo / Errado -->
+    <div id="eqCeBox" style="display:none">
+      <label class="field">Gabarito da Afirmação *</label>
+      <select id="eqCeCorreta">
+        <option value="c">✓ Certo</option>
+        <option value="e">✕ Errado</option>
+      </select>
     </div>
+
+    <!-- Campos Lacuna -->
+    <div id="eqLacunaBox" style="display:none">
+      <label class="field">Resposta(s) correta(s) da lacuna *</label>
+      <input type="text" id="eqLacunaCorreta" placeholder="Ex.: LGPD | Lei Geral de Proteção de Dados | 13.709">
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Dica: Separe sinônimos ou variações aceitas com <code>|</code>. A correção ignora maiúsculas e acentos.</div>
+    </div>
+
+    <label class="field">Dificuldade</label>
+    <select id="eqDif">
+      <option value="">Sem classificação</option>
+      <option value="Fácil">Fácil</option>
+      <option value="Média">Média</option>
+      <option value="Difícil">Difícil</option>
+    </select>
 
     <label class="field">Explicação / Gabarito comentado</label>
     <textarea id="eqExp" style="min-height:64px;font-family:var(--sans)" placeholder="Explicação exibida após responder..."></textarea>
@@ -753,7 +1025,6 @@
     </div>
   </div>
 </div>
-
 <script>
 "use strict";
 
@@ -807,51 +1078,17 @@ if(navigator.storage && navigator.storage.persist){
 }
 
 const DEFAULT_INTERVALS = [1, 3, 7, 16, 35];
+const ICON_PALETTE = [
+  "🏛️","🎯","⚖️","📊","📐","🐍","🗄️","🤖",
+  "📈","💻","🧠","✍️","🌎","🔬","🛡️","💼",
+  "📘","🏢","📑","🚀","🏆","⚡","🎓","📝"
+];
 
 const defaultState = () => ({
-  v:2, questions:[], history:[], notebooks:[],
+  v:3, questions:[], history:[], projects:[], notebooks:[],
   settings:{
     shuffleOpts:true, shuffleQ:true, simSize:10, simExam:true,
-    tema:"", dificuldade:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
-  }
-});
-
-let S = load();
-function normalizeLoadedState(s){
-  const def = defaultState();
-  s.settings = Object.assign(def.settings, s.settings||{});
-  s.questions = Array.isArray(s.questions) ? s.questions : [];
-  s.history = Array.isArray(s.history) ? s.history : [];
-  s.notebooks = Array.isArray(s.notebooks) ? s.notebooks : [];
-  return s;
-}
-function load(){
-  try{
-    const raw = Store.get(KEY);
-    if(raw) return normalizeLoadedState(JSON.parse(raw));
-  }catch(e){}
-  return defaultState();
-}
-function updateSavePill(){
-  const el = document.getElementById("saveStatus");
-  if(el) el.textContent = `💾 Salvo (${S.questions.length} q)`;
-}
-function save(){
-  Store.set(KEY, JSON.stringify(S));
-  updateSavePill();
-}
-
-// Recupera do IndexedDB caso o localStorage esteja vazio
-Store.recoverFromIDB(KEY).then(idbRaw => {
-  if(idbRaw && S.questions.length === 0){
-    try{
-      const recovered = normalizeLoadedState(JSON.parse(idbRaw));
-      if(recovered.questions.length > 0 || recovered.notebooks.length > 0){
-        S = recovered;
-        save();
-        renderNotebooks();
-      }
-    }catch(e){}
+    projeto:"", tema:"", dificuldade:"", tipo:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
   }
 });
 
@@ -862,7 +1099,7 @@ const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",
 const now = () => Date.now();
 const addDays = (ts,d) => ts + d*86400000;
 function shuffle(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [x[i],x[j]]=[x[j],x[i]]; } return x; }
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2500); }
 function showConfirm(msg, yesLabel, onYes){
   $("#modalMsg").textContent = msg;
   $("#modalYes").textContent = yesLabel || "Confirmar";
@@ -879,26 +1116,195 @@ function fmtSeconds(sec){
   const m = Math.floor(sec/60), s = sec%60;
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
-function applyTheme(){
-  const t = S.settings.theme || "auto";
-  document.documentElement.setAttribute("data-theme", t);
-}
 
-/* ---------- ícones para cadernos ---------- */
-function iconForNotebook(name){
+/* ---------- ícones ---------- */
+function defaultIconForNotebook(name){
   const n = norm(name);
-  if(n.includes("estat") || n.includes("matem") || n.includes(" احتمال")) return "📐";
+  if(n.includes("estat") || n.includes("matem") || n.includes("probab")) return "📐";
   if(n.includes("python") || n.includes("prog") || n.includes("cod") || n.includes("java")) return "🐍";
   if(n.includes("sql") || n.includes("banco") || n.includes("dados")) return "🗄️";
   if(n.includes("machine") || n.includes("ia") || n.includes("ciencia")) return "🤖";
-  if(n.includes("direito") || n.includes("lei") || n.includes("polit") || n.includes("constit")) return "⚖️";
+  if(n.includes("direito") || n.includes("lei") || n.includes("polit") || n.includes("lgpd") || n.includes("constit")) return "⚖️";
   if(n.includes("indic") || n.includes("econ") || n.includes("finan")) return "📈";
   if(n.includes("portug") || n.includes("redac") || n.includes("ling")) return "✍️";
   if(n.includes("ingles") || n.includes("espan")) return "🌎";
   return "📘";
 }
 
-/* ---------- CSV ---------- */
+/* ---------- estado e migração ---------- */
+let S = load();
+
+function normalizeLoadedState(s){
+  const def = defaultState();
+  s.settings = Object.assign(def.settings, s.settings||{});
+  s.questions = Array.isArray(s.questions) ? s.questions : [];
+  s.history = Array.isArray(s.history) ? s.history : [];
+  s.projects = Array.isArray(s.projects) ? s.projects : [];
+
+  // Migrar notebooks antigos (strings -> objetos { name, project, icon })
+  const rawNbs = Array.isArray(s.notebooks) ? s.notebooks : [];
+  s.notebooks = rawNbs.map(nb => {
+    if(typeof nb === "string"){
+      return { name: nb, project: "Geral", icon: defaultIconForNotebook(nb) };
+    }
+    return {
+      name: String(nb.name || "Geral").trim(),
+      project: String(nb.project || "Geral").trim(),
+      icon: nb.icon || defaultIconForNotebook(nb.name || "")
+    };
+  });
+
+  // Garantir campos nas questões
+  for(const q of s.questions){
+    if(!q.projeto || !String(q.projeto).trim()) q.projeto = "Geral";
+    if(!q.tema || !String(q.tema).trim()) q.tema = "Geral";
+    if(!q.tipo){
+      q.tipo = (!q.opcoes || q.opcoes.length === 0) ? "lacuna" : "multipla";
+    }
+  }
+  return s;
+}
+
+function load(){
+  try{
+    const raw = Store.get(KEY);
+    if(raw) return normalizeLoadedState(JSON.parse(raw));
+  }catch(e){}
+  return defaultState();
+}
+function updateSavePill(){
+  const el = document.getElementById("saveStatus");
+  if(el) el.textContent = `💾 Salvo (${S.questions.length} q)`;
+}
+function save(){
+  Store.set(KEY, JSON.stringify(S));
+  updateSavePill();
+}
+
+Store.recoverFromIDB(KEY).then(idbRaw => {
+  if(idbRaw && S.questions.length === 0 && S.projects.length === 0){
+    try{
+      const recovered = normalizeLoadedState(JSON.parse(idbRaw));
+      if(recovered.questions.length > 0 || recovered.projects.length > 0 || recovered.notebooks.length > 0){
+        S = recovered;
+        save();
+        renderProjects();
+      }
+    }catch(e){}
+  }
+});
+
+function applyTheme(){
+  const t = S.settings.theme || "auto";
+  document.documentElement.setAttribute("data-theme", t);
+}
+
+/* ---------- helpers de projetos e cadernos ---------- */
+const projOf = q => (q.projeto && q.projeto.trim()) ? q.projeto.trim() : "Geral";
+const temaOf = q => (q.tema && q.tema.trim()) ? q.tema.trim() : "Geral";
+const difOf = q => q.dificuldade || "";
+const tipoOf = q => q.tipo || "multipla";
+
+function ensureProjectExists(name, icon, desc){
+  const clean = String(name||"").trim() || "Geral";
+  let found = S.projects.find(p => norm(p.name) === norm(clean));
+  if(!found){
+    found = { name: clean, icon: icon || "🏛️", desc: desc || "" };
+    S.projects.push(found);
+  } else {
+    if(icon) found.icon = icon;
+    if(desc !== undefined) found.desc = desc;
+  }
+  return found;
+}
+
+function ensureNotebookExists(name, project, icon){
+  const cleanName = String(name||"").trim() || "Geral";
+  const cleanProj = String(project||"").trim() || "Geral";
+  ensureProjectExists(cleanProj);
+  let found = S.notebooks.find(n => norm(n.name)===norm(cleanName) && norm(n.project)===norm(cleanProj));
+  if(!found){
+    found = { name: cleanName, project: cleanProj, icon: icon || defaultIconForNotebook(cleanName) };
+    S.notebooks.push(found);
+  } else if(icon){
+    found.icon = icon;
+  }
+  return found;
+}
+
+function allProjectsList(){
+  const map = new Map();
+  for(const p of (S.projects||[])){
+    if(p && p.name) map.set(norm(p.name), { name: p.name.trim(), icon: p.icon||"🏛️", desc: p.desc||"" });
+  }
+  for(const nb of (S.notebooks||[])){
+    const pr = nb.project || "Geral";
+    if(!map.has(norm(pr))) map.set(norm(pr), { name: pr, icon: "🏛️", desc: "" });
+  }
+  for(const q of S.questions){
+    const pr = projOf(q);
+    if(!map.has(norm(pr))) map.set(norm(pr), { name: pr, icon: "🏛️", desc: "" });
+  }
+  return Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name,"pt"));
+}
+
+function notebooksForProject(projName){
+  const map = new Map();
+  for(const nb of (S.notebooks||[])){
+    if(!projName || norm(nb.project) === norm(projName)){
+      const key = norm(nb.project) + "::" + norm(nb.name);
+      map.set(key, { name: nb.name, project: nb.project, icon: nb.icon || defaultIconForNotebook(nb.name) });
+    }
+  }
+  for(const q of S.questions){
+    const p = projOf(q), t = temaOf(q);
+    if(!projName || norm(p) === norm(projName)){
+      const key = norm(p) + "::" + norm(t);
+      if(!map.has(key)){
+        map.set(key, { name: t, project: p, icon: defaultIconForNotebook(t) });
+      }
+    }
+  }
+  return Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name,"pt"));
+}
+
+function getNotebookIcon(name, projName){
+  const found = (S.notebooks||[]).find(n => norm(n.name)===norm(name) && (!projName || norm(n.project)===norm(projName)));
+  return found && found.icon ? found.icon : defaultIconForNotebook(name);
+}
+
+function updateDatalists(){
+  const pdl = $("#projectDatalist");
+  if(pdl){
+    pdl.innerHTML = allProjectsList().map(p => `<option value="${esc(p.name)}">`).join("");
+  }
+  const ndl = $("#notebookDatalist");
+  if(ndl){
+    const names = Array.from(new Set(notebooksForProject("").map(n => n.name))).sort((a,b)=>a.localeCompare(b,"pt"));
+    ndl.innerHTML = names.map(n => `<option value="${esc(n)}">`).join("");
+  }
+}
+
+/* ---------- Icon Pickers nos Modais ---------- */
+function renderIconPicker(gridId, inputId){
+  const grid = $(gridId), inp = $(inputId);
+  if(!grid || !inp) return;
+  const cur = inp.value.trim();
+  grid.innerHTML = ICON_PALETTE.map(ic =>
+    `<button type="button" class="ic-pick${cur===ic?" on":""}" data-ic="${ic}">${ic}</button>`
+  ).join("");
+  $$(`${gridId} .ic-pick`).forEach(btn => {
+    btn.addEventListener("click", () => {
+      inp.value = btn.dataset.ic;
+      $$(`${gridId} .ic-pick`).forEach(b => b.classList.toggle("on", b.dataset.ic === inp.value));
+    });
+  });
+  inp.oninput = () => {
+    $$(`${gridId} .ic-pick`).forEach(b => b.classList.toggle("on", b.dataset.ic === inp.value.trim()));
+  };
+}
+
+/* ---------- CSV (Múltipla Escolha + Certo/Errado + Lacuna) ---------- */
 function detectDelim(text){
   const head = text.split(/\r?\n/)[0] || "";
   const counts = { ",":0, ";":0, "\t":0 };
@@ -929,20 +1335,16 @@ function mapHeader(h){
   const n = norm(h);
   if(["enunciado","pergunta","questao","question","texto"].includes(n)) return "enunciado";
   if(["correta","resposta","gabarito","resposta correta","resposta_correta"].includes(n)) return "correta";
+  if(["projeto","concurso","edital","pasta"].includes(n)) return "projeto";
   if(["tema","assunto","categoria","topico","materia","disciplina","caderno"].includes(n)) return "tema";
+  if(["tipo","formato","modalidade"].includes(n)) return "tipo";
   if(["dificuldade","nivel"].includes(n)) return "dificuldade";
   if(["explicacao","justificativa","comentario","gabarito comentado"].includes(n)) return "explicacao";
   let m = n.match(/^(?:alternativa[ _]?)?([a-e])$/); if(m) return "opt_"+m[1];
   return null;
 }
-function ensureNotebookExists(name){
-  const clean = String(name||"").trim();
-  if(!clean) return;
-  if(!S.notebooks.some(n => norm(n) === norm(clean))){
-    S.notebooks.push(clean);
-  }
-}
-function importCSV(text, fallbackTema){
+
+function importCSV(text, fallbackProj, fallbackTema){
   if(!text.trim()){ toast("Cole ou selecione um CSV."); return; }
   const delim = detectDelim(text);
   const rows = parseCSV(text, delim);
@@ -950,9 +1352,11 @@ function importCSV(text, fallbackTema){
   const header = rows[0].map(mapHeader);
   if(!header.includes("enunciado")){ toast("Não encontrei a coluna 'enunciado'."); return; }
 
-  const defaultTema = (fallbackTema !== undefined ? fallbackTema : $("#importDefaultTema").value).trim();
+  const defProj = (fallbackProj !== undefined ? fallbackProj : $("#importDefaultProj").value).trim();
+  const defTema = (fallbackTema !== undefined ? fallbackTema : $("#importDefaultTema").value).trim();
   const existing = new Set(S.questions.map(q => norm(q.enunciado)));
   let added=0, skipped=0;
+
   for(let r=1;r<rows.length;r++){
     const obj={}; rows[r].forEach((val,c)=>{ if(header[c]) obj[header[c]] = String(val).trim(); });
     const enun = obj.enunciado; if(!enun) continue;
@@ -960,32 +1364,62 @@ function importCSV(text, fallbackTema){
 
     const opcoes=[];
     for(const L of ["a","b","c","d","e"]){ const t=obj["opt_"+L]; if(t) opcoes.push({k:L, t}); }
-    if(opcoes.length < 2){ skipped++; continue; }
 
-    let correta = norm(obj.correta);
-    if(!(correta.length===1 && "abcde".includes(correta))){
-      const hit = opcoes.find(o => norm(o.t)===correta);
-      correta = hit ? hit.k : (correta[0] && "abcde".includes(correta[0]) ? correta[0] : opcoes[0].k);
+    const rawTipo = norm(obj.tipo || "");
+    const rawCor = String(obj.correta || "").trim();
+    const normCor = norm(rawCor);
+
+    let tipo = "multipla";
+    if(rawTipo.includes("lacuna") || rawTipo.includes("cloze") || rawTipo.includes("aberta") || rawTipo.includes("digitar")){
+      tipo = "lacuna";
+    } else if(rawTipo==="ce" || rawTipo.includes("certo") || (opcoes.length===0 && ["certo","errado","c","e","verdadeiro","falso","v","f"].includes(normCor))){
+      tipo = "ce";
+    } else if(opcoes.length < 2 && rawCor){
+      tipo = "lacuna";
     }
-    if(!opcoes.some(o=>o.k===correta)) correta = opcoes[0].k;
 
-    const finalTema = obj.tema || defaultTema || "Geral";
-    ensureNotebookExists(finalTema);
+    let finalOpcoes = opcoes;
+    let finalCorreta = rawCor;
+
+    if(tipo === "ce"){
+      finalOpcoes = [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}];
+      finalCorreta = (normCor.startsWith("c") || normCor.startsWith("v")) ? "c" : "e";
+    } else if(tipo === "lacuna"){
+      if(!rawCor){ skipped++; continue; }
+      finalOpcoes = [];
+      finalCorreta = rawCor;
+    } else {
+      if(opcoes.length < 2){ skipped++; continue; }
+      let c = normCor;
+      if(!(c.length===1 && "abcde".includes(c))){
+        const hit = opcoes.find(o => norm(o.t)===c);
+        c = hit ? hit.k : (c[0] && "abcde".includes(c[0]) ? c[0] : opcoes[0].k);
+      }
+      if(!opcoes.some(o=>o.k===c)) c = opcoes[0].k;
+      finalCorreta = c;
+    }
+
+    const finalProj = obj.projeto || defProj || S.settings.projeto || "Concurso ABDI";
+    const finalTema = obj.tema || defTema || "Geral";
+    ensureNotebookExists(finalTema, finalProj);
 
     S.questions.push({
       id: now().toString(36)+Math.random().toString(36).slice(2,7),
-      enunciado:enun, opcoes, correta,
-      tema: finalTema, dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||"",
+      enunciado: enun, tipo, opcoes: finalOpcoes, correta: finalCorreta,
+      projeto: finalProj, tema: finalTema,
+      dificuldade: obj.dificuldade||"", explicacao: obj.explicacao||"",
       box:1, due:now(), acertos:0, erros:0, vistas:0, ultima:null
     });
     existing.add(norm(enun)); added++;
   }
   save();
-  toast(`${added} adicionada(s) e salva(s) na memória${skipped?` (${skipped} já existiam)`:""}.`);
-  if(defaultTema){
-    openNotebook(defaultTema);
+  toast(`${added} questão(ões) importada(s)${skipped?` (${skipped} ignoradas)`:""}.`);
+  if(defProj && defTema){
+    openNotebook(defTema, defProj);
+  } else if(defProj){
+    openProject(defProj);
   } else {
-    goNotebooks();
+    goProjects();
   }
 }
 
@@ -1003,36 +1437,31 @@ function gradeQuestion(q, ok){
 /* ---------- contagens / filtros ---------- */
 const isDue = q => q.due <= now();
 const countMastered = () => S.questions.filter(q => q.box>=5).length;
-const temaOf = q => (q.tema && q.tema.trim()) ? q.tema.trim() : "Geral";
-const difOf = q => q.dificuldade || "";
-function allNotebookNames(){
-  const map = new Map();
-  for(const n of (S.notebooks||[])){
-    const clean = String(n||"").trim();
-    if(clean) map.set(norm(clean), clean);
-  }
-  for(const q of S.questions){
-    const t = temaOf(q);
-    if(!map.has(norm(t))) map.set(norm(t), t);
-  }
-  return Array.from(map.values()).sort((a,b)=>a.localeCompare(b,"pt"));
-}
-function updateNotebookDatalist(){
-  const dl = $("#notebookDatalist");
-  if(!dl) return;
-  dl.innerHTML = allNotebookNames().map(n => `<option value="${esc(n)}">`).join("");
-}
+
 function pool(){
+  const p = S.settings.projeto;
   const t = S.settings.tema;
   const d = S.settings.dificuldade;
-  return S.questions.filter(q => (!t || temaOf(q)===t) && (!d || difOf(q)===d));
+  const tp = S.settings.tipo;
+  return S.questions.filter(q =>
+    (!p || norm(projOf(q))===norm(p)) &&
+    (!t || norm(temaOf(q))===norm(t)) &&
+    (!d || difOf(q)===d) &&
+    (!tp || tipoOf(q)===tp)
+  );
 }
+
 function difClass(d){
   const n = norm(d);
   if(n.includes("facil") || n==="easy") return "dif-easy";
   if(n.includes("medi") || n==="medium") return "dif-med";
   if(n.includes("dificil") || n==="hard") return "dif-hard";
   return "";
+}
+function tipoBadgeLabel(tp){
+  if(tp==="ce") return "Certo/Errado";
+  if(tp==="lacuna") return "Lacuna ✍️";
+  return "Múltipla Escolha";
 }
 
 /* ---------- navegação ---------- */
@@ -1043,25 +1472,35 @@ function show(id){
   if(id!=="quiz") hideDock();
   updateSavePill();
 }
-function goNotebooks(){
+function goProjects(){
+  renderProjects();
+  show("projects");
+}
+function openProject(projName){
+  S.settings.projeto = projName || "";
+  S.settings.tema = "";
+  S.settings.dificuldade = "";
+  S.settings.tipo = "";
+  save();
   renderNotebooks();
   show("notebooks");
 }
-function openNotebook(tema){
+function openNotebook(tema, projName){
+  if(projName !== undefined) S.settings.projeto = projName;
   S.settings.tema = tema || "";
   S.settings.dificuldade = "";
+  S.settings.tipo = "";
   save();
   renderHome();
   show("home");
 }
 
-/* ---------- TELA 1: MEUS CADERNOS TEMÁTICOS ---------- */
-function renderNotebooks(){
-  updateNotebookDatalist();
-  const names = allNotebookNames();
-  const empty = S.questions.length === 0 && names.length === 0;
+/* ---------- NÍVEL 1: TELA DE PROJETOS ---------- */
+function renderProjects(){
+  updateDatalists();
+  const projs = allProjectsList();
+  const empty = S.questions.length === 0 && projs.length === 0;
   $("#emptyWelcome").style.display = empty ? "" : "none";
-  $("#nbToolbar").style.display = empty ? "none" : "";
 
   const totalQ = S.questions.length;
   const totalDue = S.questions.filter(isDue).length;
@@ -1069,43 +1508,39 @@ function renderNotebooks(){
   const acHist = S.history.filter(h=>h.ok).length;
   const globalAcc = totHist ? Math.round(acHist/totHist*100)+"%" : "—";
 
-  $("#nbCount").textContent = names.length;
-  $("#nbDue").textContent = totalDue;
-  $("#nbTotalQ").textContent = totalQ;
-  $("#nbStreak").innerHTML = `${calcStreak()}d 🔥`;
-  $("#nbAcc").textContent = `• ${globalAcc}`;
-
-  const query = norm($("#nbSearch") ? $("#nbSearch").value : "");
-  const filteredNames = names.filter(n => !query || norm(n).includes(query));
+  $("#prCount").textContent = projs.length;
+  $("#prDue").textContent = totalDue;
+  $("#prTotalQ").textContent = totalQ;
+  $("#prStreak").innerHTML = `${calcStreak()}d 🔥`;
+  $("#prAcc").textContent = `• ${globalAcc}`;
 
   const cards = [];
 
-  // Card Geral (Todas as matérias) quando há questões
-  if(totalQ > 0 && !query){
+  if(totalQ > 0 && projs.length > 1){
     const masteredAll = S.questions.filter(q=>q.box>=3).length;
     const progAll = Math.round(masteredAll / totalQ * 100);
     cards.push(`
-      <div class="nb-card all-nb" data-open-nb="">
+      <div class="nb-card all-nb" data-open-proj="">
         <div class="nb-top">
           <div class="nb-icon">🌐</div>
           <span class="nb-badge due">${totalDue} para hoje</span>
         </div>
         <div>
-          <h3 class="nb-title">Caderno Geral (Todos)</h3>
-          <div class="nb-sub">Estude todas as ${totalQ} questões misturadas</div>
+          <h3 class="nb-title">Todos os Projetos</h3>
+          <div class="nb-sub">Visão unificada de todos os seus cadernos (${totalQ} questões)</div>
         </div>
-        <div class="nb-prog" title="${progAll}% em caixas avançadas"><i style="width:${progAll}%"></i></div>
+        <div class="nb-prog"><i style="width:${progAll}%"></i></div>
         <div class="nb-badges">
-          <span class="nb-badge">${totalQ} questões</span>
+          <span class="nb-badge">${projs.length} projetos</span>
           <span class="nb-badge">Acurácia: ${globalAcc}</span>
         </div>
       </div>
     `);
   }
 
-  // Cards por Caderno Temático
-  for(const name of filteredNames){
-    const qs = S.questions.filter(q => temaOf(q) === name);
+  for(const p of projs){
+    const qs = S.questions.filter(q => norm(projOf(q)) === norm(p.name));
+    const nbs = notebooksForProject(p.name);
     const qCount = qs.length;
     const dueCount = qs.filter(isDue).length;
     let a=0, e=0;
@@ -1115,17 +1550,177 @@ function renderNotebooks(){
     const prog = qCount ? Math.round(consolidated / qCount * 100) : 0;
 
     cards.push(`
-      <div class="nb-card" data-open-nb="${esc(name)}">
+      <div class="nb-card" data-open-proj="${esc(p.name)}">
         <div class="nb-top">
-          <div class="nb-icon">${iconForNotebook(name)}</div>
+          <div class="nb-icon">${esc(p.icon || "🏛️")}</div>
           <div class="nb-actions">
-            <button class="nb-act" data-rename-nb="${esc(name)}" title="Renomear caderno">✏️</button>
-            <button class="nb-act" data-del-nb="${esc(name)}" title="Excluir caderno">🗑️</button>
+            <button class="nb-act" data-edit-proj="${esc(p.name)}" title="Editar projeto / ícone">✏️</button>
+            <button class="nb-act" data-del-proj="${esc(p.name)}" title="Excluir projeto">🗑️</button>
           </div>
         </div>
         <div>
-          <h3 class="nb-title">${esc(name)}</h3>
-          <div class="nb-sub">${qCount ? `${qCount} questão(ões) cadastrada(s)` : "Caderno vazio — clique para adicionar"}</div>
+          <h3 class="nb-title">${esc(p.name)}</h3>
+          <div class="nb-sub">${esc(p.desc || `${nbs.length} caderno(s) temático(s)`)}</div>
+        </div>
+        <div class="nb-prog" title="${prog}% consolidadas"><i style="width:${prog}%"></i></div>
+        <div class="nb-badges">
+          <span class="nb-badge ${dueCount ? "due" : ""}">${dueCount} para hoje</span>
+          <span class="nb-badge">${nbs.length} caderno(s)</span>
+          <span class="nb-badge">${qCount} q</span>
+          <span class="nb-badge">Acerto: ${acc}</span>
+        </div>
+      </div>
+    `);
+  }
+
+  const grid = $("#prGrid");
+  if(!cards.length){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🏛️</div>Nenhum projeto criado ainda. Clique em <strong>＋ Novo Projeto</strong> ou carregue o exemplo acima!</div>`;
+    return;
+  }
+  grid.innerHTML = cards.join("");
+
+  $$("#prGrid [data-open-proj]").forEach(card => {
+    card.addEventListener("click", e => {
+      if(e.target.closest("[data-edit-proj],[data-del-proj]")) return;
+      openProject(card.dataset.openProj);
+    });
+  });
+
+  $$("#prGrid [data-edit-proj]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      openProjModal(btn.dataset.editProj);
+    });
+  });
+
+  $$("#prGrid [data-del-proj]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const pName = btn.dataset.delProj;
+      const count = S.questions.filter(q => norm(projOf(q)) === norm(pName)).length;
+      showConfirm(
+        count
+          ? `Excluir o projeto "${pName}", seus cadernos e suas ${count} questão(ões)?`
+          : `Remover o projeto vazio "${pName}"?`,
+        "Excluir",
+        () => {
+          S.projects = (S.projects||[]).filter(p => norm(p.name) !== norm(pName));
+          S.notebooks = (S.notebooks||[]).filter(n => norm(n.project) !== norm(pName));
+          S.questions = S.questions.filter(q => norm(projOf(q)) !== norm(pName));
+          if(norm(S.settings.projeto) === norm(pName)) S.settings.projeto = "";
+          save(); renderProjects(); toast("Projeto removido.");
+        }
+      );
+    });
+  });
+}
+
+/* ---------- Modal Novo / Editar Projeto ---------- */
+let editingProjectName = null;
+function openProjModal(existingName){
+  editingProjectName = existingName || null;
+  const p = existingName ? allProjectsList().find(x => norm(x.name)===norm(existingName)) : null;
+  $("#projModalTitle").textContent = p ? "Editar Projeto" : "Novo Projeto";
+  $("#projNameInput").value = p ? p.name : "";
+  $("#projDescInput").value = p ? (p.desc || "") : "";
+  $("#projIconInput").value = p ? (p.icon || "🏛️") : "🏛️";
+  renderIconPicker("#projIconGrid", "#projIconInput");
+  $("#projModal").classList.add("show");
+  setTimeout(()=>$("#projNameInput").focus(), 50);
+}
+function closeProjModal(){ $("#projModal").classList.remove("show"); editingProjectName = null; }
+function saveProjModal(){
+  const name = $("#projNameInput").value.trim();
+  if(!name){ toast("Digite o nome do projeto."); return; }
+  const desc = $("#projDescInput").value.trim();
+  const icon = $("#projIconInput").value.trim() || "🏛️";
+
+  if(editingProjectName){
+    const oldNorm = norm(editingProjectName);
+    S.projects = (S.projects||[]).filter(p => norm(p.name) !== oldNorm);
+    ensureProjectExists(name, icon, desc);
+    for(const nb of (S.notebooks||[])){
+      if(norm(nb.project) === oldNorm) nb.project = name;
+    }
+    for(const q of S.questions){
+      if(norm(projOf(q)) === oldNorm) q.projeto = name;
+    }
+    if(norm(S.settings.projeto) === oldNorm) S.settings.projeto = name;
+    save(); closeProjModal(); renderProjects(); toast("Projeto atualizado.");
+  } else {
+    ensureProjectExists(name, icon, desc);
+    save(); closeProjModal(); openProject(name); toast(`Projeto "${name}" criado!`);
+  }
+}
+
+/* ---------- NÍVEL 2: CADERNOS DO PROJETO ---------- */
+function renderNotebooks(){
+  updateDatalists();
+  const curProj = S.settings.projeto || "";
+  const projObj = curProj ? allProjectsList().find(p => norm(p.name)===norm(curProj)) : null;
+  $("#curProjEyebrow").textContent = curProj ? "Projeto Selecionado" : "Visão Global";
+  $("#curProjTitle").textContent = projObj ? `${projObj.icon} ${projObj.name}` : (curProj ? `🏛️ ${curProj}` : "🌐 Todos os Projetos");
+  $("#curProjDesc").textContent = (projObj && projObj.desc) ? projObj.desc : "Escolha um caderno temático para estudar ou inicie um simulado geral.";
+
+  const nbs = notebooksForProject(curProj);
+  const projQs = S.questions.filter(q => !curProj || norm(projOf(q))===norm(curProj));
+  const totalQ = projQs.length;
+  const totalDue = projQs.filter(isDue).length;
+  $("#btnProjSimulado").disabled = totalQ === 0;
+
+  const query = norm($("#nbSearch") ? $("#nbSearch").value : "");
+  const filteredNbs = nbs.filter(n => !query || norm(n.name).includes(query));
+
+  const cards = [];
+
+  if(totalQ > 0 && !query){
+    let a=0, e=0;
+    for(const q of projQs){ a+=q.acertos; e+=q.erros; }
+    const acc = (a+e) ? Math.round(a/(a+e)*100)+"%" : "—";
+    const masteredAll = projQs.filter(q=>q.box>=3).length;
+    const progAll = Math.round(masteredAll / totalQ * 100);
+    cards.push(`
+      <div class="nb-card all-nb" data-open-nb="" data-open-nb-proj="${esc(curProj)}">
+        <div class="nb-top">
+          <div class="nb-icon">🌐</div>
+          <span class="nb-badge due">${totalDue} para hoje</span>
+        </div>
+        <div>
+          <h3 class="nb-title">Todos os Cadernos (${curProj || "Geral"})</h3>
+          <div class="nb-sub">Estudar todas as ${totalQ} questões deste projeto misturadas</div>
+        </div>
+        <div class="nb-prog"><i style="width:${progAll}%"></i></div>
+        <div class="nb-badges">
+          <span class="nb-badge">${totalQ} questões</span>
+          <span class="nb-badge">Acurácia: ${acc}</span>
+        </div>
+      </div>
+    `);
+  }
+
+  for(const nb of filteredNbs){
+    const qs = S.questions.filter(q => norm(temaOf(q))===norm(nb.name) && norm(projOf(q))===norm(nb.project));
+    const qCount = qs.length;
+    const dueCount = qs.filter(isDue).length;
+    let a=0, e=0;
+    for(const q of qs){ a+=q.acertos; e+=q.erros; }
+    const acc = (a+e) ? Math.round(a/(a+e)*100)+"%" : "—";
+    const consolidated = qs.filter(q=>q.box>=3).length;
+    const prog = qCount ? Math.round(consolidated / qCount * 100) : 0;
+
+    cards.push(`
+      <div class="nb-card" data-open-nb="${esc(nb.name)}" data-open-nb-proj="${esc(nb.project)}">
+        <div class="nb-top">
+          <div class="nb-icon">${esc(nb.icon || defaultIconForNotebook(nb.name))}</div>
+          <div class="nb-actions">
+            <button class="nb-act" data-edit-nb="${esc(nb.name)}" data-edit-nb-proj="${esc(nb.project)}" title="Editar caderno / ícone">✏️</button>
+            <button class="nb-act" data-del-nb="${esc(nb.name)}" data-del-nb-proj="${esc(nb.project)}" title="Excluir caderno">🗑️</button>
+          </div>
+        </div>
+        <div>
+          <h3 class="nb-title">${esc(nb.name)}</h3>
+          <div class="nb-sub">${!curProj ? `🏛️ ${esc(nb.project)} • ` : ""}${qCount ? `${qCount} questão(ões)` : "Caderno vazio — clique para abrir"}</div>
         </div>
         <div class="nb-prog" title="${prog}% consolidadas"><i style="width:${prog}%"></i></div>
         <div class="nb-badges">
@@ -1139,22 +1734,22 @@ function renderNotebooks(){
 
   const grid = $("#nbGrid");
   if(!cards.length){
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">📚</div>Nenhum caderno encontrado. Crie um novo caderno ou importe um CSV!</div>`;
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">📚</div>Nenhum caderno neste projeto ainda. Clique em <strong>📁 ＋ Novo Caderno</strong> ou importe um CSV!</div>`;
     return;
   }
   grid.innerHTML = cards.join("");
 
   $$("#nbGrid [data-open-nb]").forEach(card => {
     card.addEventListener("click", e => {
-      if(e.target.closest("[data-rename-nb],[data-del-nb]")) return;
-      openNotebook(card.dataset.openNb);
+      if(e.target.closest("[data-edit-nb],[data-del-nb]")) return;
+      openNotebook(card.dataset.openNb, card.dataset.openNbProj);
     });
   });
 
-  $$("#nbGrid [data-rename-nb]").forEach(btn => {
+  $$("#nbGrid [data-edit-nb]").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      openNbModal(btn.dataset.renameNb);
+      openNbModal(btn.dataset.editNb, btn.dataset.editNbProj);
     });
   });
 
@@ -1162,16 +1757,16 @@ function renderNotebooks(){
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const nbName = btn.dataset.delNb;
-      const count = S.questions.filter(q => temaOf(q) === nbName).length;
+      const nbProj = btn.dataset.delNbProj;
+      const count = S.questions.filter(q => norm(temaOf(q))===norm(nbName) && norm(projOf(q))===norm(nbProj)).length;
       showConfirm(
         count
           ? `Excluir o caderno "${nbName}" e suas ${count} questão(ões)?`
           : `Remover o caderno vazio "${nbName}"?`,
         "Excluir",
         () => {
-          S.notebooks = (S.notebooks||[]).filter(n => norm(n) !== norm(nbName));
-          S.questions = S.questions.filter(q => temaOf(q) !== nbName);
-          if(S.settings.tema === nbName) S.settings.tema = "";
+          S.notebooks = (S.notebooks||[]).filter(n => !(norm(n.name)===norm(nbName) && norm(n.project)===norm(nbProj)));
+          S.questions = S.questions.filter(q => !(norm(temaOf(q))===norm(nbName) && norm(projOf(q))===norm(nbProj)));
           save(); renderNotebooks(); toast("Caderno removido.");
         }
       );
@@ -1179,38 +1774,77 @@ function renderNotebooks(){
   });
 }
 
-/* ---------- Modal de Criar / Renomear Caderno ---------- */
-let renamingNotebook = null;
-function openNbModal(existingName){
-  renamingNotebook = existingName || null;
-  $("#nbModalTitle").textContent = existingName ? "Renomear Caderno" : "Novo Caderno Temático";
-  $("#nbNameInput").value = existingName || "";
+/* ---------- Modal Novo / Editar Caderno (com escolha de ícone) ---------- */
+let editingNb = null; // { name, project }
+function openNbModal(existingName, existingProj){
+  updateDatalists();
+  editingNb = existingName ? { name: existingName, project: existingProj || S.settings.projeto || "Geral" } : null;
+  const found = editingNb
+    ? notebooksForProject(editingNb.project).find(n => norm(n.name)===norm(editingNb.name))
+    : null;
+
+  $("#nbModalTitle").textContent = editingNb ? "Editar Caderno Temático" : "Novo Caderno Temático";
+  $("#nbProjInput").value = editingNb ? editingNb.project : (S.settings.projeto || "Concurso ABDI");
+  $("#nbNameInput").value = editingNb ? editingNb.name : "";
+  $("#nbIconInput").value = found ? found.icon : "📘";
+  renderIconPicker("#nbIconGrid", "#nbIconInput");
   $("#nbModal").classList.add("show");
   setTimeout(()=>$("#nbNameInput").focus(), 50);
 }
-function closeNbModal(){ $("#nbModal").classList.remove("show"); renamingNotebook = null; }
+function closeNbModal(){ $("#nbModal").classList.remove("show"); editingNb = null; }
 function saveNbModal(){
-  const val = $("#nbNameInput").value.trim();
-  if(!val){ toast("Digite o nome do caderno."); return; }
-  if(renamingNotebook){
-    S.notebooks = (S.notebooks||[]).map(n => norm(n)===norm(renamingNotebook) ? val : n);
-    ensureNotebookExists(val);
+  const proj = $("#nbProjInput").value.trim() || "Geral";
+  const name = $("#nbNameInput").value.trim();
+  const icon = $("#nbIconInput").value.trim() || "📘";
+  if(!name){ toast("Digite o nome do caderno."); return; }
+
+  if(editingNb){
+    S.notebooks = (S.notebooks||[]).filter(n => !(norm(n.name)===norm(editingNb.name) && norm(n.project)===norm(editingNb.project)));
+    ensureNotebookExists(name, proj, icon);
     for(const q of S.questions){
-      if(temaOf(q) === renamingNotebook) q.tema = val;
+      if(norm(temaOf(q))===norm(editingNb.name) && norm(projOf(q))===norm(editingNb.project)){
+        q.tema = name;
+        q.projeto = proj;
+      }
     }
-    if(S.settings.tema === renamingNotebook) S.settings.tema = val;
-    save(); closeNbModal(); renderNotebooks(); toast("Caderno renomeado.");
+    S.settings.projeto = proj;
+    if(norm(S.settings.tema)===norm(editingNb.name)) S.settings.tema = name;
+    save(); closeNbModal(); renderNotebooks(); toast("Caderno atualizado!");
   } else {
-    ensureNotebookExists(val);
-    save(); closeNbModal(); openNotebook(val); toast(`Caderno "${val}" criado.`);
+    ensureNotebookExists(name, proj, icon);
+    save(); closeNbModal(); openNotebook(name, proj); toast(`Caderno "${name}" criado!`);
   }
 }
 
-/* ---------- TELA 2: INTERIOR DO CADERNO ---------- */
+/* ---------- NÍVEL 3: INTERIOR DO CADERNO ---------- */
 function renderFilters(){
-  const dwrap = $("#difs");
+  const curProj = S.settings.projeto;
   const curTema = S.settings.tema;
-  const subQs = S.questions.filter(q => !curTema || temaOf(q)===curTema);
+  const subQs = S.questions.filter(q =>
+    (!curProj || norm(projOf(q))===norm(curProj)) &&
+    (!curTema || norm(temaOf(q))===norm(curTema))
+  );
+
+  // Filtro de Tipo de Questão
+  const twrap = $("#tiposFilter");
+  const tset = new Set(subQs.map(tipoOf));
+  if(S.settings.tipo && !tset.has(S.settings.tipo)){ S.settings.tipo=""; save(); }
+  if(tset.size <= 1){ twrap.innerHTML=""; twrap.style.display="none"; }
+  else {
+    twrap.style.display="";
+    const curT = S.settings.tipo || "";
+    const opts = [
+      {k:"", l:"Todos os formatos"},
+      {k:"multipla", l:"Múltipla Escolha"},
+      {k:"ce", l:"Certo / Errado"},
+      {k:"lacuna", l:"Lacuna (Digitar)"}
+    ].filter(o => !o.k || tset.has(o.k));
+    twrap.innerHTML = opts.map(o => `<button class="chip sm${curT===o.k?" on":""}" data-tp="${o.k}">${o.l}</button>`).join("");
+    $$("#tiposFilter .chip").forEach(c => c.addEventListener("click", ()=>{ S.settings.tipo=c.dataset.tp; save(); renderHome(); }));
+  }
+
+  // Filtro de Dificuldade
+  const dwrap = $("#difs");
   const dset=[], dseen=new Set();
   for(const q of subQs){ const d=difOf(q); if(d && !dseen.has(d)){ dseen.add(d); dset.push(d); } }
   if(S.settings.dificuldade && !dseen.has(S.settings.dificuldade)){ S.settings.dificuldade=""; save(); }
@@ -1227,17 +1861,19 @@ function renderFilters(){
 
 function renderHome(){
   renderFilters();
+  const projName = S.settings.projeto;
   const nbName = S.settings.tema;
-  $("#curNbEyebrow").textContent = nbName ? "Caderno Temático" : "Visão Geral";
-  $("#curNbTitle").textContent = nbName ? `${iconForNotebook(nbName)} ${nbName}` : "🌐 Caderno Geral (Todos)";
+  $("#backToNotebooks").textContent = projName ? `📂 ${projName}` : "📂 Cadernos";
+  $("#curNbEyebrow").textContent = projName ? `Projeto: ${projName}` : "Todos os Projetos";
+  const ic = nbName ? getNotebookIcon(nbName, projName) : "🌐";
+  $("#curNbTitle").textContent = nbName ? `${ic} ${nbName}` : `🌐 Todos os Cadernos (${projName || "Geral"})`;
 
   const base = pool();
   const total = base.length;
   $("#manageCount").textContent = total;
 
   const ids = new Set(base.map(q=>q.id));
-  const filtered = S.settings.tema || S.settings.dificuldade;
-  const hist = filtered ? S.history.filter(h=>ids.has(h.qid)) : S.history;
+  const hist = S.history.filter(h=>ids.has(h.qid));
   const due = base.filter(isDue).length;
   const err = base.filter(q=>q.ultima===false).length;
   $("#sTotal").textContent = total;
@@ -1258,13 +1894,12 @@ function renderHome(){
     b.disabled = n===0;
   });
 
-  // Distribuição nas caixas de Leitner deste caderno
   const boxes = [0,0,0,0,0];
   for(const q of base){
     const b = Math.min(5, Math.max(1, q.box||1));
     boxes[b-1]++;
   }
-  const labels = ["Caixa 1 (Hoje)", "Caixa 2", "Caixa 3", "Caixa 4", "Caixa 5 (Dominada)"];
+  const labels = ["Caixa 1 (Hoje)", "Caixa 2 (+3d)", "Caixa 3 (+7d)", "Caixa 4 (+16d)", "Caixa 5 ⭐ (+35d)"];
   $("#nbBoxList").innerHTML = boxes.map((c, idx) => {
     const p = total ? Math.round(c / total * 100) : 0;
     return `<div class="tema-row">
@@ -1276,7 +1911,7 @@ function renderHome(){
   }).join("");
 }
 
-/* ---------- sessão de quiz ---------- */
+/* ---------- SESSÃO DE QUIZ (Múltipla Escolha + Certo/Errado + Lacuna) ---------- */
 let sess = null;
 let timerId = null;
 
@@ -1302,6 +1937,7 @@ function buildQueue(mode){
   if(mode!=="revisao" && S.settings.shuffleQ) list = shuffle(list);
   return list;
 }
+
 function startSession(mode, customQueue){
   const q = customQueue || buildQueue(mode);
   if(!q.length){ toast("Nada para estudar neste modo."); return; }
@@ -1314,39 +1950,91 @@ function startSession(mode, customQueue){
   startTimer();
   renderQ();
 }
+
+function formatEnunciadoHtml(text, isLacuna){
+  const escaped = esc(text);
+  if(!isLacuna) return escaped;
+  return escaped.replace(/(_{3,}|\[\.\.\.\])/g, `<span class="blank-slot">lacuna</span>`);
+}
+
+function checkLacunaMatch(userText, corretaSpec){
+  const u = norm(userText);
+  if(!u) return false;
+  const parts = String(corretaSpec || "").split("|").map(s => norm(s)).filter(Boolean);
+  return parts.includes(u);
+}
+
 function renderQ(){
   const q = sess.queue[sess.i];
+  const tp = tipoOf(q);
   sess.answered=false; sess.picked=null; sess.eliminated=new Set();
   $("#prog").style.width = (sess.i/sess.queue.length*100)+"%";
   $("#qcount").textContent = `${sess.i+1}/${sess.queue.length}`;
+
   const meta=[];
-  meta.push(`<span class="tag">${esc(temaOf(q))}</span>`);
+  meta.push(`<span class="tag">${esc(projOf(q))} › ${esc(temaOf(q))}</span>`);
+  meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
   if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
-  $("#enun").textContent = q.enunciado;
-  const disp = S.settings.shuffleOpts ? shuffle(q.opcoes) : q.opcoes;
-  sess.disp = disp;
-  $("#opts").innerHTML = disp.map((o,idx)=>`
-    <div class="opt-wrap">
-      <button class="opt" data-k="${o.k}" data-idx="${idx}">
-        <span class="k">${String.fromCharCode(65+idx)}</span>
-        <span class="tx">${esc(o.t)}</span>
-      </button>
-      <button class="elim-btn" data-k="${o.k}" title="Riscar / eliminar alternativa">✂</button>
-    </div>`).join("");
-  $$("#opts .opt").forEach(el => {
-    el.addEventListener("click", ()=>pick(el));
-    el.addEventListener("contextmenu", e=>{ e.preventDefault(); toggleEliminate(el.dataset.k); });
-  });
-  $$("#opts .elim-btn").forEach(btn => {
-    btn.addEventListener("click", ()=>toggleEliminate(btn.dataset.k));
-  });
+
+  $("#enun").innerHTML = formatEnunciadoHtml(q.enunciado, tp==="lacuna");
   const fb=$("#feedback"); fb.className="feedback"; $("#exp").textContent="";
+  $("#overrideOkBtn").style.display = "none";
+
   const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
+
+  if(tp === "lacuna"){
+    $("#opts").innerHTML = `
+      <div class="lacuna-box">
+        <input type="text" class="lacuna-input" id="lacunaInput" placeholder="Digite sua resposta para a lacuna..." autocomplete="off">
+      </div>
+    `;
+    $("#kbdHint").innerHTML = `Digite a resposta e pressione <strong>Enter</strong> para confirmar`;
+    const inp = $("#lacunaInput");
+    inp.addEventListener("input", () => {
+      sess.picked = inp.value.trim();
+      setDock(lbl, !sess.picked);
+    });
+    inp.addEventListener("keydown", e => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        if(sess.answered){ next(); }
+        else if(sess.picked){ confirmAnswer(); }
+      }
+    });
+    setTimeout(()=>inp.focus(), 40);
+  } else {
+    const baseOpts = tp==="ce" ? [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}] : q.opcoes;
+    const disp = (tp==="multipla" && S.settings.shuffleOpts) ? shuffle(baseOpts) : baseOpts;
+    sess.disp = disp;
+    $("#opts").innerHTML = disp.map((o,idx)=>`
+      <div class="opt-wrap">
+        <button class="opt" data-k="${o.k}" data-idx="${idx}">
+          <span class="k">${tp==="ce" ? (o.k==="c"?"C":"E") : String.fromCharCode(65+idx)}</span>
+          <span class="tx">${esc(o.t)}</span>
+        </button>
+        ${tp==="multipla" ? `<button class="elim-btn" data-k="${o.k}" title="Riscar / eliminar alternativa">✂</button>` : ""}
+      </div>`).join("");
+    $("#kbdHint").innerHTML = tp==="ce"
+      ? `Atalhos: <strong>C</strong> (ou 1) Certo • <strong>E</strong> (ou 2) Errado • <strong>Enter</strong> confirma`
+      : `Atalhos: <strong>A–E</strong> ou <strong>1–5</strong> seleciona • <strong>Enter</strong> confirma • <strong>✂</strong> risca opção`;
+
+    $$("#opts .opt").forEach(el => {
+      el.addEventListener("click", ()=>pick(el));
+      if(tp==="multipla"){
+        el.addEventListener("contextmenu", e=>{ e.preventDefault(); toggleEliminate(el.dataset.k); });
+      }
+    });
+    $$("#opts .elim-btn").forEach(btn => {
+      btn.addEventListener("click", ()=>toggleEliminate(btn.dataset.k));
+    });
+  }
+
   setDock(lbl, true); showDock();
 }
+
 function toggleEliminate(k){
   if(sess.answered) return;
   const opt = $(`#opts .opt[data-k="${k}"]`);
@@ -1368,6 +2056,7 @@ function toggleEliminate(k){
     }
   }
 }
+
 function pick(el){
   if(sess.answered) return;
   const k = el.dataset.k;
@@ -1377,11 +2066,15 @@ function pick(el){
   const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
   setDock(lbl, false);
 }
+
 function confirmAnswer(){
   if(sess.answered){ next(); return; }
-  if(!sess.picked){ toast("Selecione uma alternativa."); return; }
+  if(!sess.picked){ toast("Informe ou selecione uma resposta."); return; }
   const q = sess.queue[sess.i];
-  const ok = sess.picked === q.correta;
+  const tp = tipoOf(q);
+  const ok = tp === "lacuna"
+    ? checkLacunaMatch(sess.picked, q.correta)
+    : (sess.picked === q.correta);
 
   if(sess.isExam){
     sess.answers.push({ q, picked: sess.picked, ok });
@@ -1395,21 +2088,60 @@ function confirmAnswer(){
   sess.answers.push({ q, picked: sess.picked, ok });
   if(ok) sess.right++; else sess.wrong.push(q);
   gradeQuestion(q, ok);
-  $$("#opts .opt").forEach(el=>{
-    el.classList.add("locked");
-    if(el.dataset.k===q.correta) el.classList.add("correct");
-    else if(el.dataset.k===sess.picked) el.classList.add("wrong");
-  });
-  const fb=$("#feedback"); fb.classList.add("show", ok?"ok":"no");
-  $("#verdict").innerHTML = ok ? "✓ Acertou" : "✕ Errou";
-  $("#exp").textContent = q.explicacao || (ok ? "" : "Resposta correta destacada acima.");
-  setDock(sess.i+1<sess.queue.length ? "Próxima" : "Ver resultado", false);
+
+  if(tp === "lacuna"){
+    const inp = $("#lacunaInput");
+    if(inp){
+      inp.readOnly = true;
+      inp.classList.add(ok ? "correct" : "wrong");
+    }
+    if(!ok){
+      const ovBtn = $("#overrideOkBtn");
+      ovBtn.style.display = "";
+      ovBtn.onclick = () => overrideLacunaAsCorrect(q);
+    }
+  } else {
+    $$("#opts .opt").forEach(el=>{
+      el.classList.add("locked");
+      if(el.dataset.k===q.correta) el.classList.add("correct");
+      else if(el.dataset.k===sess.picked) el.classList.add("wrong");
+    });
+  }
+
+  const fb=$("#feedback"); fb.className = "feedback show " + (ok?"ok":"no");
+  $("#verdict").innerHTML = ok ? "✓ Acertou!" : `✕ Errou ${tp==="lacuna" ? `— Esperado: <strong>${esc(q.correta)}</strong>` : ""}`;
+  $("#exp").textContent = q.explicacao || (ok ? "" : (tp==="lacuna" ? "" : "Resposta correta destacada acima."));
+  setDock(sess.i+1<sess.queue.length ? "Próxima (Enter)" : "Ver resultado", false);
 }
+
+function overrideLacunaAsCorrect(q){
+  // Reverte o último registro de erro para acerto
+  if(q.erros > 0) q.erros--;
+  q.acertos++;
+  q.ultima = true;
+  q.box = Math.min(5, (q.box||1) + 1);
+  q.due = addDays(now(), ivDays(q.box));
+  if(S.history.length) S.history[S.history.length - 1].ok = true;
+  sess.right++;
+  sess.wrong = sess.wrong.filter(x => x.id !== q.id);
+  const lastAns = sess.answers[sess.answers.length - 1];
+  if(lastAns) lastAns.ok = true;
+  save();
+
+  const inp = $("#lacunaInput");
+  if(inp){ inp.classList.remove("wrong"); inp.classList.add("correct"); }
+  $("#feedback").className = "feedback show ok";
+  $("#verdict").innerHTML = "✓ Considerado como acerto!";
+  $("#overrideOkBtn").style.display = "none";
+  toast("Resposta validada como correta!");
+}
+
 function next(){
   sess.i++;
   if(sess.i>=sess.queue.length){ $("#prog").style.width="100%"; finish(); return; }
   renderQ();
 }
+
 function finish(){
   stopTimer();
   const elapsedSec = Math.max(1, Math.round((now() - sess.startTs)/1000));
@@ -1426,12 +2158,20 @@ function finish(){
     retryBtn.style.display="";
     $("#resWrongTitle").textContent = `Para revisar (${sess.wrong.length})`;
     $("#resWrong").innerHTML = sess.answers.filter(a=>!a.ok).map(({q, picked})=>{
-      const cor = q.opcoes.find(o=>o.k===q.correta);
-      const usr = q.opcoes.find(o=>o.k===picked);
+      const tp = tipoOf(q);
+      let corTxt = q.correta;
+      let usrTxt = picked;
+      if(tp !== "lacuna"){
+        const baseOpts = tp==="ce" ? [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}] : q.opcoes;
+        const corObj = baseOpts.find(o=>o.k===q.correta);
+        const usrObj = baseOpts.find(o=>o.k===picked);
+        corTxt = corObj ? corObj.t : q.correta;
+        usrTxt = usrObj ? usrObj.t : picked;
+      }
       return `<div class="wrong-item">
         <div class="q">${esc(q.enunciado)}</div>
-        ${usr ? `<div class="u">✕ Sua resposta: ${esc(usr.t)}</div>` : ""}
-        <div class="a">✓ Correta: ${esc(cor?cor.t:"")}</div>
+        ${usrTxt ? `<div class="u">✕ Sua resposta: ${esc(usrTxt)}</div>` : ""}
+        <div class="a">✓ Correta: ${esc(corTxt)}</div>
         ${q.explicacao ? `<div class="ex">💡 ${esc(q.explicacao)}</div>` : ""}
       </div>`;
     }).join("");
@@ -1441,6 +2181,7 @@ function finish(){
   }
   show("result");
 }
+
 function drawRing(pct){
   const r=52, c=2*Math.PI*r, off=c*(1-pct/100);
   const col = pct>=70?"var(--ok)":pct>=40?"var(--accent)":"var(--err)";
@@ -1534,10 +2275,11 @@ function renderStats(){
 
   const byTema={};
   for(const q of S.questions){
-    const tema = temaOf(q);
+    const label = `${projOf(q)} › ${temaOf(q)}`;
     const a=q.acertos, e=q.erros;
     if(a+e===0) continue;
-    (byTema[tema] ||= {a:0,e:0}); byTema[tema].a+=a; byTema[tema].e+=e;
+    (byTema[label] ||= {a:0,e:0,t:temaOf(q),p:projOf(q)});
+    byTema[label].a+=a; byTema[label].e+=e;
   }
   const keys=Object.keys(byTema).sort((x,y)=>{
     const px=byTema[x].a/(byTema[x].a+byTema[x].e), py=byTema[y].a/(byTema[y].a+byTema[y].e); return py-px;
@@ -1546,7 +2288,7 @@ function renderStats(){
   if(!keys.length){ box.innerHTML='<div class="empty"><div class="big">📊</div>Responda algumas questões para ver os dados por caderno.</div>'; return; }
   box.innerHTML = keys.map(k=>{
     const o=byTema[k], totT=o.a+o.e, p=Math.round(o.a/totT*100);
-    return `<div class="tema-row"><span class="nm">${iconForNotebook(k)} ${esc(k)}</span>
+    return `<div class="tema-row"><span class="nm">${getNotebookIcon(o.t, o.p)} ${esc(k)}</span>
       <span class="cnt">${o.a}/${totT}</span>
       <span class="minibar"><i style="width:${p}%"></i></span>
       <span class="pct">${p}%</span></div>`;
@@ -1555,19 +2297,42 @@ function renderStats(){
 
 /* ---------- gerenciador de questões ---------- */
 let editingId = null;
-function renderManage(preselectTema){
-  updateNotebookDatalist();
-  const sel = $("#qFilterTema");
-  const curTema = preselectTema !== undefined ? preselectTema : sel.value;
-  const temas = allNotebookNames();
-  sel.innerHTML = `<option value="">Todos os cadernos (${S.questions.length})</option>` +
-    temas.map(t=>`<option value="${esc(t)}"${curTema===t?" selected":""}>${esc(t)}</option>`).join("");
+let currentEqTipo = "multipla";
+
+function setEqModalTipo(tipo){
+  currentEqTipo = tipo || "multipla";
+  $$("#eqTipoSeg button").forEach(b => b.classList.toggle("on", b.dataset.tipo === currentEqTipo));
+  $("#eqMultiplaBox").style.display = currentEqTipo === "multipla" ? "" : "none";
+  $("#eqCeBox").style.display = currentEqTipo === "ce" ? "" : "none";
+  $("#eqLacunaBox").style.display = currentEqTipo === "lacuna" ? "" : "none";
+}
+
+function renderManage(preselectProj, preselectTema){
+  updateDatalists();
+  const selP = $("#qFilterProj");
+  const selT = $("#qFilterTema");
+  const curProj = preselectProj !== undefined ? preselectProj : selP.value;
+  const curTema = preselectTema !== undefined ? preselectTema : selT.value;
+
+  const projs = allProjectsList();
+  selP.innerHTML = `<option value="">Todos os projetos</option>` +
+    projs.map(p=>`<option value="${esc(p.name)}"${curProj===p.name?" selected":""}>${esc(p.name)}</option>`).join("");
+
+  const nbs = notebooksForProject(selP.value);
+  const uniqueTemas = Array.from(new Set(nbs.map(n=>n.name)));
+  selT.innerHTML = `<option value="">Todos os cadernos</option>` +
+    uniqueTemas.map(t=>`<option value="${esc(t)}"${curTema===t?" selected":""}>${esc(t)}</option>`).join("");
 
   const query = norm($("#qSearch").value);
-  const fTema = sel.value;
+  const fProj = selP.value;
+  const fTema = selT.value;
+  const fTipo = $("#qFilterTipo").value;
+
   const list = S.questions.filter(q => {
-    if(fTema && temaOf(q) !== fTema) return false;
-    if(query && !norm(q.enunciado + " " + q.tema + " " + q.dificuldade + " " + q.explicacao).includes(query)) return false;
+    if(fProj && norm(projOf(q)) !== norm(fProj)) return false;
+    if(fTema && norm(temaOf(q)) !== norm(fTema)) return false;
+    if(fTipo && tipoOf(q) !== fTipo) return false;
+    if(query && !norm(q.enunciado + " " + q.projeto + " " + q.tema + " " + q.dificuldade + " " + q.explicacao).includes(query)) return false;
     return true;
   });
 
@@ -1577,7 +2342,16 @@ function renderManage(preselectTema){
     return;
   }
   wrap.innerHTML = list.map(q => {
-    const cor = q.opcoes.find(o=>o.k===q.correta);
+    const tp = tipoOf(q);
+    let gabHtml = "";
+    if(tp === "lacuna"){
+      gabHtml = `Lacuna: ${esc(q.correta)}`;
+    } else if(tp === "ce"){
+      gabHtml = `Gabarito: ${q.correta==="c" ? "Certo" : "Errado"}`;
+    } else {
+      const cor = q.opcoes.find(o=>o.k===q.correta);
+      gabHtml = `Gabarito (${q.correta.toUpperCase()}): ${esc(cor ? cor.t : "")}`;
+    }
     return `<div class="q-item">
       <div>
         <div class="q-item-head">
@@ -1588,13 +2362,14 @@ function renderManage(preselectTema){
           </div>
         </div>
         <div class="qmeta" style="margin-bottom:6px">
-          <span class="tag">${esc(temaOf(q))}</span>
+          <span class="tag">${esc(projOf(q))} › ${esc(temaOf(q))}</span>
+          <span class="tag">${tipoBadgeLabel(tp)}</span>
           ${q.dificuldade ? `<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>` : ""}
           <span class="tag box">caixa ${q.box}/5</span>
           <span class="tag">✓ ${q.acertos} • ✕ ${q.erros}</span>
         </div>
       </div>
-      <div style="font-size:12.5px;color:var(--ok);font-weight:600;margin-top:4px">Gabarito (${q.correta.toUpperCase()}): ${esc(cor ? cor.t : "")}</div>
+      <div style="font-size:12.5px;color:var(--ok);font-weight:600;margin-top:4px">${gabHtml}</div>
     </div>`;
   }).join("");
 
@@ -1603,58 +2378,82 @@ function renderManage(preselectTema){
     const id = b.dataset.del;
     showConfirm("Excluir esta questão do caderno?", "Excluir", () => {
       S.questions = S.questions.filter(q => q.id !== id);
-      save(); renderManage(); renderNotebooks(); toast("Questão excluída.");
+      save(); renderManage(); toast("Questão excluída.");
     });
   }));
 }
 
-function openEditModal(id, defaultTema){
-  updateNotebookDatalist();
+function openEditModal(id, defaultProj, defaultTema){
+  updateDatalists();
   editingId = id || null;
   const q = id ? S.questions.find(x => x.id === id) : null;
+  const tp = q ? tipoOf(q) : "multipla";
+  setEqModalTipo(tp);
+
   $("#editModalTitle").textContent = q ? "Editar questão" : "Nova questão";
+  $("#eqProj").value = q ? projOf(q) : (defaultProj || S.settings.projeto || "Concurso ABDI");
+  $("#eqTema").value = q ? temaOf(q) : (defaultTema || S.settings.tema || "");
   $("#eqEnun").value = q ? q.enunciado : "";
+
   for(const L of ["a","b","c","d","e"]){
-    const found = q ? q.opcoes.find(o => o.k === L) : null;
+    const found = (q && q.opcoes) ? q.opcoes.find(o => o.k === L) : null;
     $("#eq"+L.toUpperCase()).value = found ? found.t : "";
   }
-  $("#eqCorreta").value = q ? q.correta : "a";
+  $("#eqCorreta").value = (q && tp==="multipla") ? q.correta : "a";
+  $("#eqCeCorreta").value = (q && tp==="ce") ? q.correta : "c";
+  $("#eqLacunaCorreta").value = (q && tp==="lacuna") ? q.correta : "";
   $("#eqDif").value = q ? (q.dificuldade || "") : "";
-  $("#eqTema").value = q ? (q.tema || "") : (defaultTema || S.settings.tema || "");
   $("#eqExp").value = q ? (q.explicacao || "") : "";
   $("#editModal").classList.add("show");
 }
+
 function closeEditModal(){ $("#editModal").classList.remove("show"); editingId = null; }
+
 function saveQuestionModal(){
   const enun = $("#eqEnun").value.trim();
   if(!enun){ toast("Digite o enunciado."); return; }
-  const opcoes = [];
-  for(const L of ["a","b","c","d","e"]){
-    const val = $("#eq"+L.toUpperCase()).value.trim();
-    if(val) opcoes.push({ k:L, t:val });
-  }
-  if(opcoes.length < 2){ toast("Preencha pelo menos duas alternativas."); return; }
-  let correta = $("#eqCorreta").value;
-  if(!opcoes.some(o => o.k === correta)) correta = opcoes[0].k;
+  const finalProj = $("#eqProj").value.trim() || "Geral";
   const finalTema = $("#eqTema").value.trim() || "Geral";
-  ensureNotebookExists(finalTema);
+  let opcoes = [];
+  let correta = "";
+
+  if(currentEqTipo === "multipla"){
+    for(const L of ["a","b","c","d","e"]){
+      const val = $("#eq"+L.toUpperCase()).value.trim();
+      if(val) opcoes.push({ k:L, t:val });
+    }
+    if(opcoes.length < 2){ toast("Preencha pelo menos as alternativas A e B."); return; }
+    correta = $("#eqCorreta").value;
+    if(!opcoes.some(o => o.k === correta)) correta = opcoes[0].k;
+  } else if(currentEqTipo === "ce"){
+    opcoes = [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}];
+    correta = $("#eqCeCorreta").value;
+  } else {
+    correta = $("#eqLacunaCorreta").value.trim();
+    if(!correta){ toast("Digite a resposta correta da lacuna."); return; }
+    opcoes = [];
+  }
+
+  ensureNotebookExists(finalTema, finalProj);
 
   if(editingId){
     const q = S.questions.find(x => x.id === editingId);
     if(q){
       q.enunciado = enun;
+      q.tipo = currentEqTipo;
       q.opcoes = opcoes;
       q.correta = correta;
-      q.dificuldade = $("#eqDif").value.trim();
+      q.projeto = finalProj;
       q.tema = finalTema;
+      q.dificuldade = $("#eqDif").value.trim();
       q.explicacao = $("#eqExp").value.trim();
     }
     toast("Questão atualizada na memória.");
   } else {
     S.questions.unshift({
       id: now().toString(36)+Math.random().toString(36).slice(2,7),
-      enunciado: enun, opcoes, correta,
-      tema: finalTema,
+      enunciado: enun, tipo: currentEqTipo, opcoes, correta,
+      projeto: finalProj, tema: finalTema,
       dificuldade: $("#eqDif").value.trim(),
       explicacao: $("#eqExp").value.trim(),
       box:1, due:now(), acertos:0, erros:0, vistas:0, ultima:null
@@ -1665,6 +2464,7 @@ function saveQuestionModal(){
   if($("#manage").classList.contains("active")) renderManage();
   if($("#home").classList.contains("active")) renderHome();
   if($("#notebooks").classList.contains("active")) renderNotebooks();
+  if($("#projects").classList.contains("active")) renderProjects();
 }
 
 /* ---------- ajustes ---------- */
@@ -1689,20 +2489,21 @@ function importDataFile(file){
   fr.onload=()=>{ try{
     const s = normalizeLoadedState(JSON.parse(fr.result));
     S = s; save();
-    applyTheme(); goNotebooks(); toast("Backup restaurado com sucesso!");
+    applyTheme(); goProjects(); toast("Backup restaurado com sucesso!");
   }catch(e){ toast("Arquivo inválido."); } };
   fr.readAsText(file);
 }
 
 /* ---------- CSV de exemplo ---------- */
-const SAMPLE = `enunciado,a,b,c,d,correta,tema,dificuldade,explicacao
-"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Estatística,Fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
-"Qual lei trata da proteção de dados pessoais no Brasil?","Lei de Acesso à Informação","Marco Civil da Internet","LGPD (Lei 13.709/2018)","Código de Defesa do Consumidor",c,Políticas Públicas,Fácil,"A LGPD, em vigor desde 2020, regula o tratamento de dados pessoais por entes públicos e privados."
-"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Estatística,Média,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
-"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Indicadores,Média,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para renda."
-"Qual estrutura de dados é ideal para checar pertencimento de forma rápida em Python?","list","set","tuple","str",b,Python,Fácil,"set usa hashing e oferece checagem de pertencimento em tempo médio O(1)."
-"Em SQL, qual cláusula filtra grupos criados pelo GROUP BY?","WHERE","ORDER BY","HAVING","DISTINCT",c,Banco de Dados,Média,"WHERE filtra linhas antes do agrupamento; HAVING filtra os grupos após o GROUP BY."
-"Qual métrica evita falsos negativos críticos em classificação binária (ex.: triagem médica)?","Precisão (Precision)","Revocação (Recall / Sensibilidade)","Especificidade","Acurácia simples",b,Machine Learning,Difícil,"O Recall mede VP / (VP + FN), penalizando diretamente a ocorrência de falsos negativos."`;
+const SAMPLE = `enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
+"O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Concurso ABDI,Estatística,multipla,Fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
+"Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Concurso ABDI,Estatística,multipla,Média,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
+"A ___ (sigla) é a lei brasileira (Lei nº 13.709/2018) que regula a proteção e o tratamento de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Fácil,"A LGPD entrou em vigor em 2020 e aplica-se a pessoas físicas e jurídicas, de direito público ou privado."
+"Segundo a LGPD, o tratamento de dados pessoais sensíveis dispensa qualquer hipótese legal quando realizado pelo poder público.",,,,,Errado,Concurso ABDI,Políticas Públicas e LGPD,ce,Média,"Errado. O poder público também deve observar as bases legais restritas do art. 11 da LGPD para tratar dados sensíveis."
+"O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Concurso ABDI,Economia e Indicadores,multipla,Média,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para medir desigualdade de renda."
+"Qual estrutura de dados nativa do Python oferece verificação de pertencimento (x in s) em tempo médio O(1) usando tabela hash?",,,,,set | conjunto | dict,Tecnologia e Dados,Python,lacuna,Fácil,"Tanto set quanto dict utilizam hashing, garantindo busca em tempo constante O(1) no caso médio."
+"Em SQL, a cláusula ___ é utilizada para filtrar grupos criados após o GROUP BY.",,,,,HAVING,Tecnologia e Dados,Banco de Dados e SQL,lacuna,Média,"WHERE filtra linhas individuais antes do agrupamento; HAVING filtra os grupos agregados."
+"Em problemas de classificação binária com classes muito desbalanceadas, a acurácia simples isolada é suficiente para avaliar a qualidade do modelo.",,,,,Errado,Tecnologia e Dados,Machine Learning,ce,Difícil,"Errado. Em bases desbalanceadas, um modelo pode ter alta acurácia apenas chutando a classe majoritária; métricas como F1-Score e ROC-AUC são necessárias."`;
 
 function downloadSample(){
   const blob=new Blob([SAMPLE],{type:"text/csv"});
@@ -1714,36 +2515,43 @@ function downloadSample(){
 window.addEventListener("keydown", e => {
   const tag = (e.target && e.target.tagName) || "";
   if(["INPUT","TEXTAREA","SELECT"].includes(tag)){
-    if(e.key === "Enter" && $("#nbModal").classList.contains("show")){
-      e.preventDefault(); saveNbModal();
-    }
+    if(e.key === "Enter" && $("#projModal").classList.contains("show")){ e.preventDefault(); saveProjModal(); }
+    if(e.key === "Enter" && $("#nbModal").classList.contains("show")){ e.preventDefault(); saveNbModal(); }
+    if(e.key === "Escape" && $("#quiz").classList.contains("active")){ e.preventDefault(); renderHome(); show("home"); }
     return;
   }
 
-  if($("#nbModal").classList.contains("show")){
-    if(e.key === "Escape") closeNbModal();
-    return;
-  }
-  if($("#editModal").classList.contains("show")){
-    if(e.key === "Escape") closeEditModal();
-    return;
-  }
-  if($("#modal").classList.contains("show")){
-    if(e.key === "Escape") $("#modalNo").click();
-    return;
-  }
+  if($("#projModal").classList.contains("show")){ if(e.key === "Escape") closeProjModal(); return; }
+  if($("#nbModal").classList.contains("show")){ if(e.key === "Escape") closeNbModal(); return; }
+  if($("#editModal").classList.contains("show")){ if(e.key === "Escape") closeEditModal(); return; }
+  if($("#modal").classList.contains("show")){ if(e.key === "Escape") $("#modalNo").click(); return; }
   if(!$("#quiz").classList.contains("active") || !sess) return;
 
+  const q = sess.queue[sess.i];
+  const tp = tipoOf(q);
   const k = e.key.toLowerCase();
-  if(["1","2","3","4","5"].includes(k)){
-    const idx = Number(k) - 1;
-    const el = $(`#opts .opt[data-idx="${idx}"]`);
-    if(el){ e.preventDefault(); pick(el); }
-  } else if(["a","b","c","d","e"].includes(k)){
-    const idx = k.charCodeAt(0) - 97;
-    const el = $(`#opts .opt[data-idx="${idx}"]`);
-    if(el){ e.preventDefault(); pick(el); }
-  } else if(e.key === "Enter" || e.key === " "){
+
+  if(tp === "ce"){
+    if(k === "c" || k === "1"){
+      const el = $(`#opts .opt[data-k="c"]`);
+      if(el){ e.preventDefault(); pick(el); }
+    } else if(k === "e" || k === "2"){
+      const el = $(`#opts .opt[data-k="e"]`);
+      if(el){ e.preventDefault(); pick(el); }
+    }
+  } else if(tp === "multipla"){
+    if(["1","2","3","4","5"].includes(k)){
+      const idx = Number(k) - 1;
+      const el = $(`#opts .opt[data-idx="${idx}"]`);
+      if(el){ e.preventDefault(); pick(el); }
+    } else if(["a","b","c","d","e"].includes(k)){
+      const idx = k.charCodeAt(0) - 97;
+      const el = $(`#opts .opt[data-idx="${idx}"]`);
+      if(el){ e.preventDefault(); pick(el); }
+    }
+  }
+
+  if(e.key === "Enter" || e.key === " "){
     const btn = $("#dockBtn");
     if(btn && !btn.disabled){ e.preventDefault(); confirmAnswer(); }
   } else if(e.key === "Escape"){
@@ -1753,53 +2561,91 @@ window.addEventListener("keydown", e => {
 
 /* ---------- eventos ---------- */
 $$("#modes .mode").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled) startSession(b.dataset.mode); }));
+$$("#eqTipoSeg button").forEach(b=> b.addEventListener("click", ()=>setEqModalTipo(b.dataset.tipo)));
 
-function openImportView(prefillTema){
-  updateNotebookDatalist();
+function openImportView(prefillProj, prefillTema){
+  updateDatalists();
+  $("#importDefaultProj").value = prefillProj || "";
   $("#importDefaultTema").value = prefillTema || "";
   show("import");
 }
 
-$("#btnImportTop").addEventListener("click", ()=>openImportView(""));
-$("#welcomeImportBtn").addEventListener("click", ()=>openImportView(""));
-$("#nbImportHereBtn").addEventListener("click", ()=>openImportView(S.settings.tema || ""));
-$("#manImportBtn").addEventListener("click", ()=>openImportView($("#qFilterTema").value || ""));
+$("#btnImportTop").addEventListener("click", ()=>openImportView("", ""));
+$("#btnImportProj").addEventListener("click", ()=>openImportView(S.settings.projeto || "", ""));
+$("#nbImportHereBtn").addEventListener("click", ()=>openImportView(S.settings.projeto || "", S.settings.tema || ""));
+$("#manImportBtn").addEventListener("click", ()=>openImportView($("#qFilterProj").value || "", $("#qFilterTema").value || ""));
 
-$("#loadSampleBtn").addEventListener("click", ()=>importCSV(SAMPLE, ""));
+$("#loadSampleBtn").addEventListener("click", ()=>{
+  ensureProjectExists("Concurso ABDI", "🏛️", "Preparação completa por cadernos temáticos");
+  ensureProjectExists("Tecnologia e Dados", "💻", "Python, SQL e Machine Learning");
+  importCSV(SAMPLE, "", "");
+});
+$("#welcomeWikiBtn").addEventListener("click", ()=>show("wiki"));
+$("#goWikiFromImport").addEventListener("click", ()=>show("wiki"));
 $("#pasteSampleBtn").addEventListener("click", ()=>{ $("#paste").value = SAMPLE; toast("Exemplo preenchido. Clique em Importar."); });
 
-$("#btnNewNotebook").addEventListener("click", ()=>openNbModal(null));
+$("#btnNewProject").addEventListener("click", ()=>openProjModal(null));
+$("#projModalCancel").addEventListener("click", closeProjModal);
+$("#projModalSave").addEventListener("click", saveProjModal);
+$("#projModal").addEventListener("click", e=>{ if(e.target===$("#projModal")) closeProjModal(); });
+
+$("#btnNewNotebook").addEventListener("click", ()=>openNbModal(null, S.settings.projeto));
 $("#nbModalCancel").addEventListener("click", closeNbModal);
 $("#nbModalSave").addEventListener("click", saveNbModal);
 $("#nbModal").addEventListener("click", e=>{ if(e.target===$("#nbModal")) closeNbModal(); });
 $("#nbSearch").addEventListener("input", renderNotebooks);
 
-$("#navNotebooks").addEventListener("click", goNotebooks);
-$("#backToNotebooks").addEventListener("click", goNotebooks);
-$("#brand").addEventListener("click", goNotebooks);
+$("#btnProjSimulado").addEventListener("click", ()=>{
+  S.settings.tema = "";
+  S.settings.dificuldade = "";
+  S.settings.tipo = "";
+  save();
+  startSession("simulado");
+});
 
-$("#navManage").addEventListener("click", ()=>{ renderManage(""); show("manage"); });
-$("#goManageHome").addEventListener("click", ()=>{ renderManage(S.settings.tema || ""); show("manage"); });
+$("#navProjects").addEventListener("click", goProjects);
+$("#backToProjects").addEventListener("click", goProjects);
+$("#crumbProjects").addEventListener("click", goProjects);
+$("#backToNotebooks").addEventListener("click", ()=>{ renderNotebooks(); show("notebooks"); });
+$("#brand").addEventListener("click", goProjects);
+
+$("#navManage").addEventListener("click", ()=>{ renderManage("", ""); show("manage"); });
+$("#goManageHome").addEventListener("click", ()=>{ renderManage(S.settings.projeto || "", S.settings.tema || ""); show("manage"); });
 $("#navStats").addEventListener("click", ()=>{ renderStats(); show("stats"); });
+$("#navWiki").addEventListener("click", ()=>show("wiki"));
 $("#navSettings").addEventListener("click", ()=>{ renderSettings(); show("settings"); });
+
+$("#copyPromptBtn").addEventListener("click", ()=>{
+  const txt = $("#aiPromptText").textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>toast("Prompt copiado para a área de transferência!"));
+  } else {
+    toast("Selecione o texto acima para copiar.");
+  }
+});
 
 $("#quizBack").addEventListener("click", ()=>{ renderHome(); show("home"); });
 $("#dockBtn").addEventListener("click", confirmAnswer);
 $("#resBackNotebook").addEventListener("click", ()=>{ renderHome(); show("home"); });
-$("#resHome").addEventListener("click", goNotebooks);
+$("#resHome").addEventListener("click", goProjects);
 $("#resRetryWrong").addEventListener("click", ()=>{
   if(sess && sess.wrong && sess.wrong.length){ startSession("erradas", sess.wrong.slice()); }
 });
-$("#stBack").addEventListener("click", goNotebooks);
-$("#setBack").addEventListener("click", goNotebooks);
-$("#impBack").addEventListener("click", goNotebooks);
-$("#manBack").addEventListener("click", goNotebooks);
+$("#stBack").addEventListener("click", goProjects);
+$("#wikiBack").addEventListener("click", goProjects);
+$("#setBack").addEventListener("click", goProjects);
+$("#impBack").addEventListener("click", goProjects);
+$("#manBack").addEventListener("click", goProjects);
 
 $("#qSearch").addEventListener("input", ()=>renderManage());
+$("#qFilterProj").addEventListener("change", ()=>renderManage($("#qFilterProj").value, ""));
 $("#qFilterTema").addEventListener("change", ()=>renderManage());
-$("#btnNewQ").addEventListener("click", ()=>openEditModal(null, $("#qFilterTema").value || ""));
-$("#btnNewQFromNb").addEventListener("click", ()=>openEditModal(null, ""));
-$("#nbAddQuestionBtn").addEventListener("click", ()=>openEditModal(null, S.settings.tema || ""));
+$("#qFilterTipo").addEventListener("change", ()=>renderManage());
+
+$("#btnQuickNewQ").addEventListener("click", ()=>openEditModal(null, "", ""));
+$("#btnNewQ").addEventListener("click", ()=>openEditModal(null, $("#qFilterProj").value || "", $("#qFilterTema").value || ""));
+$("#btnNewQFromNb").addEventListener("click", ()=>openEditModal(null, S.settings.projeto || "", ""));
+$("#nbAddQuestionBtn").addEventListener("click", ()=>openEditModal(null, S.settings.projeto || "", S.settings.tema || ""));
 $("#eqCancel").addEventListener("click", closeEditModal);
 $("#eqSave").addEventListener("click", saveQuestionModal);
 $("#editModal").addEventListener("click", e=>{ if(e.target===$("#editModal")) closeEditModal(); });
@@ -1826,11 +2672,11 @@ $("#resetIv").addEventListener("click", ()=>{ S.settings.intervals=DEFAULT_INTER
 $("#expData").addEventListener("click", exportData);
 $("#impData").addEventListener("click", ()=>$("#jsonFile").click());
 $("#jsonFile").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) importDataFile(f); });
-$("#clearAll").addEventListener("click", ()=> showConfirm("Apagar TODOS os cadernos, questões e o progresso deste navegador? Isso não pode ser desfeito.", "Apagar tudo", ()=>{ S=defaultState(); save(); applyTheme(); goNotebooks(); renderSettings(); toast("Tudo apagado."); }));
+$("#clearAll").addEventListener("click", ()=> showConfirm("Apagar TODOS os projetos, cadernos, questões e o progresso deste navegador? Isso não pode ser desfeito.", "Apagar tudo", ()=>{ S=defaultState(); save(); applyTheme(); goProjects(); renderSettings(); toast("Tudo apagado."); }));
 
 /* ---------- init & PWA ---------- */
 applyTheme();
-renderNotebooks();
+renderProjects();
 updateSavePill();
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
