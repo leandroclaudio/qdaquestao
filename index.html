@@ -238,6 +238,21 @@
     border-bottom:2.5px solid var(--accent);background:var(--accent-soft);color:var(--accent);
     border-radius:6px 6px 0 0;font-family:var(--mono);font-size:.9em;text-align:center;
   }
+  .lacuna-inline{
+    display:inline-block;font:inherit;font-size:.92em;font-weight:650;line-height:1.25;
+    padding:2px 8px;margin:2px 4px;border:none;border-bottom:2.5px solid var(--accent);
+    background:var(--accent-soft);color:var(--ink);border-radius:6px 6px 0 0;
+    max-width:100%;vertical-align:baseline;transition:border-color .15s,background .15s,color .15s;
+  }
+  .lacuna-inline:focus{outline:none;background:var(--surface);box-shadow:0 2px 0 0 var(--accent)}
+  .lacuna-inline.correct{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .lacuna-inline.wrong{border-color:var(--err);background:var(--err-soft);color:var(--err)}
+  .lacuna-fields-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .lacuna-field-row{display:flex;align-items:center;gap:8px}
+  .lacuna-field-row .lf-idx{
+    flex:none;font:700 12px/1 var(--mono);color:var(--accent);background:var(--accent-soft);
+    border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:8px;padding:7px 9px;
+  }
   .opts{display:flex;flex-direction:column;gap:10px}
   .opt-wrap{display:flex;align-items:stretch;gap:8px}
   .opt{
@@ -551,7 +566,10 @@
         <div class="feedback" id="feedback">
           <div class="verdict">
             <span id="verdict"></span>
-            <button class="mini-btn" id="overrideOkBtn" style="display:none">✓ Considerar minha resposta correta</button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="mini-btn" id="overrideOkBtn" style="display:none">✓ Considerar minha resposta correta</button>
+              <button class="mini-btn" id="editAfterAnsBtn" style="display:none" title="Ajustar enunciado, gabarito ou explicação desta questão">✏️ Ajustar questão</button>
+            </div>
           </div>
           <div class="exp" id="exp"></div>
         </div>
@@ -746,7 +764,7 @@
             <tr>
               <td><code>enunciado</code></td>
               <td><strong>Sim</strong></td>
-              <td>Texto da pergunta. Nas questões de lacuna, use <code>___</code> (três sublinhados) onde quiser destacar o espaço em branco.</td>
+              <td>Texto da pergunta. Nas questões de lacuna, use <code>___</code> (três sublinhados) para cada espaço em branco no próprio texto (pode haver uma ou várias lacunas na mesma questão).</td>
             </tr>
             <tr>
               <td><code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>, <code>e</code></td>
@@ -759,7 +777,7 @@
               <td>
                 • <strong>Múltipla Escolha:</strong> letra da resposta (<code>a</code>, <code>b</code>, <code>c</code>, <code>d</code> ou <code>e</code>).<br>
                 • <strong>Certo/Errado:</strong> escreva <code>Certo</code> ou <code>Errado</code>.<br>
-                • <strong>Lacuna:</strong> escreva a resposta esperada. Para aceitar mais de uma resposta/sinônimo, separe com barra vertical <code>|</code> (ex.: <code>LGPD | Lei 13.709</code>).
+                • <strong>Lacuna:</strong> escreva a resposta esperada. Use <code>|</code> para sinônimos da mesma lacuna (ex.: <code>LGPD | Lei 13.709</code>). Se houver várias lacunas (<code>___</code>), separe as respostas de cada lacuna com <code>;;</code> (ex.: <code>limites ;; critérios</code>). Se a ordem das respostas for livre, inicie com <code>~</code> (ex.: <code>~ publicidade ;; economicidade</code>).
               </td>
             </tr>
             <tr>
@@ -795,6 +813,8 @@
       <div class="wiki-pre">enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
 "O que a mediana representa?","A média","O valor central","A moda","A amplitude",b,Concurso ABDI,Estatística,multipla,Fácil,"Divide os dados ordenados ao meio."
 "A ___ é a lei brasileira (13.709/2018) de proteção de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,LGPD,lacuna,Fácil,"A LGPD regula o tratamento de dados no Brasil."
+"O contrato de gestão estipula ___ e ___ para avaliação de desempenho.",,,,,limites ;; critérios,Concurso ABDI,Gestão Pública,lacuna,Média,"Duas lacunas em ordem fixa separadas por ;;."
+"São princípios expressos na administração pública: ___ e ___.",,,,,~ legalidade ;; impessoalidade,Concurso ABDI,Gestão Pública,lacuna,Média,"Com prefixo ~, o aluno pode preencher os termos em qualquer ordem."
 "Na LGPD, dados sensíveis dispensam base legal quando tratados pelo poder público.",,,,,Errado,Concurso ABDI,LGPD,ce,Média,"Errado. O poder público deve observar o art. 11 da LGPD."</div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px">
@@ -806,9 +826,10 @@ Use exatamente este cabeçalho na primeira linha:
 enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicacao
 
 Regras:
-1. Misture questões dos tipos: "multipla" (4 alternativas a..d), "ce" (Certo/Errado, deixando a..d vazias e colocando Certo ou Errado em correta) e "lacuna" (use ___ no enunciado, deixe a..d vazias e coloque a resposta curta em correta; se houver sinônimos, separe com | ).
-2. Envolva todos os textos entre aspas duplas ("...").
-3. Retorne apenas o bloco CSV puro pronto para copiar.</div>
+1. Misture questões dos tipos: "multipla" (4 alternativas a..d), "ce" (Certo/Errado, deixando a..d vazias e colocando Certo ou Errado em correta) e "lacuna" (deixe a..d vazias e use ___ no enunciado).
+2. Nas questões de "lacuna", use uma lacuna (___) por termo-chave e cuide para não deixar palavras ao redor que entreguem a resposta (como artigos ou flexões óbvias). Se houver mais de um ___ na mesma frase, separe o gabarito de cada lacuna com ;; na coluna correta (ex.: "limites ;; critérios"). Use | para sinônimos da mesma lacuna (ex.: "2 anos | dois anos ;; 4 anos | quatro anos"). Quando a frase pedir uma enumeração em que a ordem não importa, comece a coluna correta com ~ (ex.: "~ publicidade ;; economicidade").
+3. Envolva todos os textos entre aspas duplas ("...").
+4. Retorne apenas o bloco CSV puro pronto para copiar.</div>
     </div>
 
     <button class="btn ghost" id="wikiBack" style="max-width:240px">Voltar</button>
@@ -1004,9 +1025,15 @@ Regras:
 
     <!-- Campos Lacuna -->
     <div id="eqLacunaBox" style="display:none">
-      <label class="field">Resposta(s) correta(s) da lacuna *</label>
-      <input type="text" id="eqLacunaCorreta" placeholder="Ex.: LGPD | Lei Geral de Proteção de Dados | 13.709">
-      <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Dica: Separe sinônimos ou variações aceitas com <code>|</code>. A correção ignora maiúsculas e acentos.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 6px;flex-wrap:wrap">
+        <label class="field" style="margin:0">Resposta(s) correta(s) por lacuna *</label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer">
+          <input type="checkbox" id="eqLacunaOrdemLivre" style="width:16px;height:16px;accent-color:var(--accent)">
+          Ordem livre (<code>~</code>)
+        </label>
+      </div>
+      <div id="eqLacunaFields" class="lacuna-fields-list"></div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:6px">Dica: Use <code>___</code> no enunciado para criar vários campos automaticamente. Em cada lacuna, separe sinônimos com <code>|</code>.</div>
     </div>
 
     <label class="field">Dificuldade</label>
@@ -1363,6 +1390,26 @@ function mapHeader(h){
   return null;
 }
 
+function countBlanks(text){
+  const m = String(text || "").match(/(_{3,}|\[\.\.\.\])/g);
+  return m ? m.length : 0;
+}
+
+function parseLacunaSpec(correta){
+  let raw = String(correta || "").trim();
+  let ordemLivre = false;
+  if(raw.startsWith("~")){
+    ordemLivre = true;
+    raw = raw.slice(1).trim();
+  }
+  if(!raw) return { ordemLivre, lacunas: [] };
+  const lacunas = raw
+    .split(";;")
+    .map(blk => blk.split("|").map(v => v.trim()).filter(Boolean))
+    .filter(arr => arr.length > 0);
+  return { ordemLivre, lacunas };
+}
+
 function analyzeCSV(text, fallbackProj, fallbackTema){
   const cleaned = cleanCSVInput(text);
   if(!cleaned) return { ok:false, msg:"Cole o conteúdo CSV ou escolha um arquivo .csv." };
@@ -1395,6 +1442,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
   const existing = new Set(S.questions.map(q => `${norm(projOf(q))}::${norm(temaOf(q))}::${norm(q.enunciado)}`));
   const items = [];
   let duplicates = 0, invalid = 0;
+  const inconsistentLines = [];
   const countsByType = { multipla:0, ce:0, lacuna:0 };
 
   for(let r = headerRowIdx + 1; r < rows.length; r++){
@@ -1424,7 +1472,9 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
       tipo = "multipla";
     } else {
       // Detecção automática inteligente
-      if(opcoes.length >= 2){
+      if(rawCor.startsWith("~") || rawCor.includes(";;")){
+        tipo = "lacuna";
+      } else if(opcoes.length >= 2){
         tipo = "multipla";
       } else if(opcoes.length === 0 && ["certo","errado","c","e","verdadeiro","falso","v","f"].includes(normCor) && !/_{3,}|\[\.\.\.\]/.test(enun)){
         tipo = "ce";
@@ -1443,7 +1493,14 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
       finalOpcoes = [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}];
       finalCorreta = (normCor.startsWith("c") || normCor.startsWith("v")) ? "c" : "e";
     } else if(tipo === "lacuna"){
-      if(!rawCor){ invalid++; continue; }
+      const spec = parseLacunaSpec(rawCor);
+      if(!spec.lacunas.length){ invalid++; continue; }
+      const nBlanks = countBlanks(enun);
+      if(nBlanks > 0 && nBlanks !== spec.lacunas.length){
+        invalid++;
+        inconsistentLines.push(r + 1);
+        continue;
+      }
       finalOpcoes = [];
       finalCorreta = rawCor;
     } else {
@@ -1466,7 +1523,7 @@ function analyzeCSV(text, fallbackProj, fallbackTema){
     });
   }
 
-  return { ok:true, items, duplicates, invalid, countsByType, defProj, defTema };
+  return { ok:true, items, duplicates, invalid, inconsistentLines, countsByType, defProj, defTema };
 }
 
 function updateImportPreview(){
@@ -1488,10 +1545,13 @@ function updateImportPreview(){
   if(res.countsByType.lacuna) parts.push(`${res.countsByType.lacuna} Lacuna`);
   const extra = [];
   if(res.duplicates) extra.push(`${res.duplicates} já existente(s) no mesmo caderno`);
-  if(res.invalid) extra.push(`${res.invalid} linha(s) incompleta(s)`);
+  if(res.invalid) extra.push(`${res.invalid} linha(s) inválida(s)/incompleta(s)`);
+  const inconsHtml = (res.inconsistentLines && res.inconsistentLines.length)
+    ? `<br><span style="font-size:12px;color:var(--err);font-weight:600">Linhas com lacunas inconsistentes: ${res.inconsistentLines.join(", ")}</span>`
+    : "";
   box.innerHTML = res.items.length
-    ? `<strong style="color:var(--ok)">✓ Pronto para importar: ${res.items.length} questão(ões) válida(s)</strong> (${parts.join(" • ")})${extra.length ? `<br><span style="font-size:12px">Ignoradas: ${extra.join(", ")}.</span>` : ""}`
-    : `<strong style="color:var(--warn)">⚠️ Nenhuma questão nova para adicionar</strong>${extra.length ? ` (${extra.join(", ")})` : ""}.`;
+    ? `<strong style="color:var(--ok)">✓ Pronto para importar: ${res.items.length} questão(ões) válida(s)</strong> (${parts.join(" • ")})${extra.length ? `<br><span style="font-size:12px">Ignoradas: ${extra.join(", ")}.</span>` : ""}${inconsHtml}`
+    : `<strong style="color:var(--warn)">⚠️ Nenhuma questão nova para adicionar</strong>${extra.length ? ` (${extra.join(", ")})` : ""}.${inconsHtml}`;
 }
 
 function importCSV(text, fallbackProj, fallbackTema){
@@ -2043,17 +2103,113 @@ function startSession(mode, customQueue){
   renderQ();
 }
 
-function formatEnunciadoHtml(text, isLacuna){
-  const escaped = esc(text);
-  if(!isLacuna) return escaped;
-  return escaped.replace(/(_{3,}|\[\.\.\.\])/g, `<span class="blank-slot">lacuna</span>`);
+function normLacunaToken(s){
+  return norm(s)
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^(?:(?:o|a|os|as|de|da|do|das|dos|pela|pelo|ao)\s+)+/i, "")
+    .trim();
 }
 
-function checkLacunaMatch(userText, corretaSpec){
-  const u = norm(userText);
-  if(!u) return false;
-  const parts = String(corretaSpec || "").split("|").map(s => norm(s)).filter(Boolean);
-  return parts.includes(u);
+function formatEnunciadoHtml(text, isLacuna, spec){
+  const escaped = esc(text);
+  if(!isLacuna) return escaped;
+  const parsed = spec || parseLacunaSpec("");
+  const allLens = parsed.lacunas.flat().map(v => v.length);
+  const globalMax = allLens.length ? Math.max(...allLens) : 12;
+  let idx = 0;
+  return escaped.replace(/(_{3,}|\[\.\.\.\])/g, () => {
+    const i = idx++;
+    let maxLen = globalMax;
+    if(!parsed.ordemLivre && parsed.lacunas[i] && parsed.lacunas[i].length){
+      maxLen = Math.max(...parsed.lacunas[i].map(v => v.length));
+    }
+    const w = Math.min(28, Math.max(8, maxLen + 2));
+    return `<input type="text" class="lacuna-inline" data-idx="${i}" style="width:${w}ch" autocomplete="off">`;
+  });
+}
+
+function checkLacunaMatch(userAnswers, corretaSpec){
+  const spec = parseLacunaSpec(corretaSpec);
+  const ansArr = Array.isArray(userAnswers) ? userAnswers : [String(userAnswers || "")];
+  const n = Math.max(spec.lacunas.length, 1);
+  const perBlank = new Array(n).fill(false);
+  const expectedPerBlank = new Array(n).fill("");
+
+  const matchBlock = (uStr, variants) => {
+    const u = normLacunaToken(uStr);
+    if(!u) return false;
+    return (variants || []).some(v => normLacunaToken(v) === u);
+  };
+
+  if(!spec.ordemLivre){
+    for(let i = 0; i < n; i++){
+      const variants = spec.lacunas[i] || spec.lacunas[0] || [];
+      perBlank[i] = matchBlock(ansArr[i] || "", variants);
+      expectedPerBlank[i] = variants[0] || "";
+    }
+  } else {
+    const usedBlocks = new Set();
+    for(let i = 0; i < n; i++){
+      let hitIdx = -1;
+      for(let b = 0; b < spec.lacunas.length; b++){
+        if(usedBlocks.has(b)) continue;
+        if(matchBlock(ansArr[i] || "", spec.lacunas[b])){
+          hitIdx = b;
+          break;
+        }
+      }
+      if(hitIdx !== -1){
+        usedBlocks.add(hitIdx);
+        perBlank[i] = true;
+        expectedPerBlank[i] = spec.lacunas[hitIdx][0] || "";
+      }
+    }
+    for(let i = 0; i < n; i++){
+      if(!perBlank[i]){
+        let unusedIdx = -1;
+        for(let b = 0; b < spec.lacunas.length; b++){
+          if(!usedBlocks.has(b)){ unusedIdx = b; break; }
+        }
+        if(unusedIdx !== -1){
+          usedBlocks.add(unusedIdx);
+          expectedPerBlank[i] = spec.lacunas[unusedIdx][0] || "";
+        } else {
+          const fallback = spec.lacunas[i] || spec.lacunas[0] || [""];
+          expectedPerBlank[i] = fallback[0] || "";
+        }
+      }
+    }
+  }
+
+  return {
+    ok: perBlank.length > 0 && perBlank.every(Boolean),
+    perBlank,
+    expectedPerBlank,
+    ordemLivre: spec.ordemLivre
+  };
+}
+
+function formatLacunaManageSummary(correta){
+  const spec = parseLacunaSpec(correta);
+  if(!spec.lacunas.length) return `Lacuna: ${correta || ""}`;
+  const joined = spec.lacunas.map(v => v[0]).join(" / ");
+  const prefix = spec.lacunas.length > 1 ? "Lacunas" : "Lacuna";
+  return `${prefix}: ${joined}${spec.ordemLivre ? " (ordem livre)" : ""}`;
+}
+
+function formatLacunaUserSummary(picked){
+  const arr = Array.isArray(picked) ? picked : [String(picked || "")];
+  if(arr.length <= 1) return arr[0] || "(em branco)";
+  return arr.map((v, i) => `Lacuna ${i+1}: ${v || "(em branco)"}`).join(" • ");
+}
+
+function formatLacunaExpectedSummary(correta){
+  const spec = parseLacunaSpec(correta);
+  if(!spec.lacunas.length) return String(correta || "");
+  if(spec.lacunas.length === 1) return spec.lacunas[0].join(" / ");
+  return spec.lacunas.map((v, i) => `Lacuna ${i+1}: ${v.join(" / ")}`).join(" • ") + (spec.ordemLivre ? " (ordem livre)" : "");
 }
 
 function renderQ(){
@@ -2071,32 +2227,73 @@ function renderQ(){
   if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
 
-  $("#enun").innerHTML = formatEnunciadoHtml(q.enunciado, tp==="lacuna");
+  const spec = tp === "lacuna" ? parseLacunaSpec(q.correta) : null;
+  const nBlanks = tp === "lacuna" ? countBlanks(q.enunciado) : 0;
+  $("#enun").innerHTML = formatEnunciadoHtml(q.enunciado, tp==="lacuna", spec);
   const fb=$("#feedback"); fb.className="feedback"; $("#exp").textContent="";
   $("#overrideOkBtn").style.display = "none";
+  if($("#editAfterAnsBtn")) $("#editAfterAnsBtn").style.display = "none";
 
   const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
 
   if(tp === "lacuna"){
-    $("#opts").innerHTML = `
-      <div class="lacuna-box">
-        <input type="text" class="lacuna-input" id="lacunaInput" placeholder="Digite sua resposta para a lacuna..." autocomplete="off">
-      </div>
-    `;
-    $("#kbdHint").innerHTML = `Digite a resposta e pressione <strong>Enter</strong> para confirmar`;
-    const inp = $("#lacunaInput");
-    inp.addEventListener("input", () => {
-      sess.picked = inp.value.trim();
-      setDock(lbl, !sess.picked);
-    });
-    inp.addEventListener("keydown", e => {
-      if(e.key === "Enter"){
-        e.preventDefault();
-        if(sess.answered){ next(); }
-        else if(sess.picked){ confirmAnswer(); }
-      }
-    });
-    setTimeout(()=>inp.focus(), 40);
+    if(nBlanks > 0){
+      $("#opts").innerHTML = "";
+      const inps = $$("#enun .lacuna-inline");
+      sess.picked = new Array(inps.length).fill("");
+      $("#kbdHint").innerHTML = inps.length > 1
+        ? `Use <strong>Tab</strong> ou <strong>Enter</strong> para avançar entre lacunas • <strong>Enter</strong> na última confirma`
+        : `Digite a resposta e pressione <strong>Enter</strong> para confirmar (<strong>Tab</strong> navega entre lacunas)`;
+      inps.forEach((inp, idx) => {
+        inp.addEventListener("input", () => {
+          sess.picked[idx] = inp.value.trim();
+          const hasAny = sess.picked.some(v => v.length > 0);
+          setDock(lbl, !hasAny);
+        });
+        inp.addEventListener("keydown", e => {
+          if(e.key === "Tab"){
+            if(!e.shiftKey && idx + 1 < inps.length){
+              e.preventDefault();
+              inps[idx + 1].focus();
+            } else if(e.shiftKey && idx - 1 >= 0){
+              e.preventDefault();
+              inps[idx - 1].focus();
+            }
+          } else if(e.key === "Enter"){
+            e.preventDefault();
+            if(sess.answered){
+              next();
+            } else if(idx + 1 < inps.length){
+              inps[idx + 1].focus();
+            } else if(sess.picked.some(v => v.length > 0)){
+              confirmAnswer();
+            }
+          }
+        });
+      });
+      if(inps[0]) setTimeout(()=>inps[0].focus(), 40);
+    } else {
+      $("#opts").innerHTML = `
+        <div class="lacuna-box">
+          <input type="text" class="lacuna-input" id="lacunaInput" placeholder="Digite sua resposta para a lacuna..." autocomplete="off">
+        </div>
+      `;
+      sess.picked = [""];
+      $("#kbdHint").innerHTML = `Digite a resposta e pressione <strong>Enter</strong> para confirmar (<strong>Tab</strong> navega entre lacunas)`;
+      const inp = $("#lacunaInput");
+      inp.addEventListener("input", () => {
+        sess.picked[0] = inp.value.trim();
+        setDock(lbl, !sess.picked[0]);
+      });
+      inp.addEventListener("keydown", e => {
+        if(e.key === "Enter"){
+          e.preventDefault();
+          if(sess.answered){ next(); }
+          else if(sess.picked[0]){ confirmAnswer(); }
+        }
+      });
+      setTimeout(()=>inp.focus(), 40);
+    }
   } else {
     const baseOpts = tp==="ce" ? [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}] : q.opcoes;
     const disp = (tp==="multipla" && S.settings.shuffleOpts) ? shuffle(baseOpts) : baseOpts;
@@ -2161,15 +2358,18 @@ function pick(el){
 
 function confirmAnswer(){
   if(sess.answered){ next(); return; }
-  if(!sess.picked){ toast("Informe ou selecione uma resposta."); return; }
+  const hasPick = Array.isArray(sess.picked)
+    ? sess.picked.some(v => String(v || "").trim().length > 0)
+    : !!sess.picked;
+  if(!hasPick){ toast("Informe ou selecione uma resposta."); return; }
   const q = sess.queue[sess.i];
   const tp = tipoOf(q);
-  const ok = tp === "lacuna"
-    ? checkLacunaMatch(sess.picked, q.correta)
-    : (sess.picked === q.correta);
+  const lacRes = tp === "lacuna" ? checkLacunaMatch(sess.picked, q.correta) : null;
+  const ok = tp === "lacuna" ? lacRes.ok : (sess.picked === q.correta);
+  const recordedPick = Array.isArray(sess.picked) ? sess.picked.slice() : sess.picked;
 
   if(sess.isExam){
-    sess.answers.push({ q, picked: sess.picked, ok });
+    sess.answers.push({ q, picked: recordedPick, ok });
     if(ok) sess.right++; else sess.wrong.push(q);
     gradeQuestion(q, ok);
     next();
@@ -2177,16 +2377,17 @@ function confirmAnswer(){
   }
 
   sess.answered=true;
-  sess.answers.push({ q, picked: sess.picked, ok });
+  sess.answers.push({ q, picked: recordedPick, ok });
   if(ok) sess.right++; else sess.wrong.push(q);
   gradeQuestion(q, ok);
 
   if(tp === "lacuna"){
-    const inp = $("#lacunaInput");
-    if(inp){
+    const inps = $$("#enun .lacuna-inline, #opts #lacunaInput");
+    inps.forEach((inp, idx) => {
       inp.readOnly = true;
-      inp.classList.add(ok ? "correct" : "wrong");
-    }
+      const blankOk = !!(lacRes.perBlank[idx]);
+      inp.classList.add(blankOk ? "correct" : "wrong");
+    });
     if(!ok){
       const ovBtn = $("#overrideOkBtn");
       ovBtn.style.display = "";
@@ -2200,8 +2401,30 @@ function confirmAnswer(){
     });
   }
 
+  const editBtn = $("#editAfterAnsBtn");
+  if(editBtn){
+    editBtn.style.display = "";
+    editBtn.onclick = () => openEditModal(q.id);
+  }
+
   const fb=$("#feedback"); fb.className = "feedback show " + (ok?"ok":"no");
-  $("#verdict").innerHTML = ok ? "✓ Acertou!" : `✕ Errou ${tp==="lacuna" ? `— Esperado: <strong>${esc(q.correta)}</strong>` : ""}`;
+  if(ok){
+    $("#verdict").innerHTML = "✓ Acertou!";
+  } else if(tp === "lacuna"){
+    let expSummary = "";
+    if(lacRes.perBlank.length === 1){
+      expSummary = `Esperado: <strong>${esc(lacRes.expectedPerBlank[0])}</strong>`;
+    } else {
+      const wrongParts = [];
+      lacRes.perBlank.forEach((bOk, idx) => {
+        if(!bOk) wrongParts.push(`Lacuna ${idx+1}: <strong>${esc(lacRes.expectedPerBlank[idx])}</strong>`);
+      });
+      expSummary = wrongParts.join(" • ");
+    }
+    $("#verdict").innerHTML = `✕ Errou (${expSummary})`;
+  } else {
+    $("#verdict").innerHTML = "✕ Errou";
+  }
   $("#exp").textContent = q.explicacao || (ok ? "" : (tp==="lacuna" ? "" : "Resposta correta destacada acima."));
   setDock(sess.i+1<sess.queue.length ? "Próxima (Enter)" : "Ver resultado", false);
 }
@@ -2220,8 +2443,10 @@ function overrideLacunaAsCorrect(q){
   if(lastAns) lastAns.ok = true;
   save();
 
-  const inp = $("#lacunaInput");
-  if(inp){ inp.classList.remove("wrong"); inp.classList.add("correct"); }
+  $$("#enun .lacuna-inline, #opts #lacunaInput").forEach(inp => {
+    inp.classList.remove("wrong");
+    inp.classList.add("correct");
+  });
   $("#feedback").className = "feedback show ok";
   $("#verdict").innerHTML = "✓ Considerado como acerto!";
   $("#overrideOkBtn").style.display = "none";
@@ -2251,9 +2476,12 @@ function finish(){
     $("#resWrongTitle").textContent = `Para revisar (${sess.wrong.length})`;
     $("#resWrong").innerHTML = sess.answers.filter(a=>!a.ok).map(({q, picked})=>{
       const tp = tipoOf(q);
-      let corTxt = q.correta;
-      let usrTxt = picked;
-      if(tp !== "lacuna"){
+      let corTxt = "";
+      let usrTxt = "";
+      if(tp === "lacuna"){
+        corTxt = formatLacunaExpectedSummary(q.correta);
+        usrTxt = formatLacunaUserSummary(picked);
+      } else {
         const baseOpts = tp==="ce" ? [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}] : q.opcoes;
         const corObj = baseOpts.find(o=>o.k===q.correta);
         const usrObj = baseOpts.find(o=>o.k===picked);
@@ -2391,12 +2619,37 @@ function renderStats(){
 let editingId = null;
 let currentEqTipo = "multipla";
 
+function syncEqLacunaFields(seedValues){
+  const wrap = $("#eqLacunaFields");
+  if(!wrap) return;
+  const existing = Array.isArray(seedValues)
+    ? seedValues
+    : $$("#eqLacunaFields .eq-lacuna-item").map(inp => inp.value);
+  const n = Math.max(1, countBlanks($("#eqEnun") ? $("#eqEnun").value : ""));
+  const rows = [];
+  for(let i = 0; i < n; i++){
+    const val = existing[i] !== undefined ? existing[i] : "";
+    if(n === 1){
+      rows.push(`<input type="text" class="eq-lacuna-item" data-idx="0" placeholder="Ex.: LGPD | Lei Geral de Proteção de Dados | 13.709" value="${esc(val)}">`);
+    } else {
+      rows.push(`
+        <div class="lacuna-field-row">
+          <span class="lf-idx">Lacuna ${i+1}</span>
+          <input type="text" class="eq-lacuna-item" data-idx="${i}" placeholder="Resposta da lacuna ${i+1} (use | para sinônimos)" value="${esc(val)}">
+        </div>
+      `);
+    }
+  }
+  wrap.innerHTML = rows.join("");
+}
+
 function setEqModalTipo(tipo){
   currentEqTipo = tipo || "multipla";
   $$("#eqTipoSeg button").forEach(b => b.classList.toggle("on", b.dataset.tipo === currentEqTipo));
   $("#eqMultiplaBox").style.display = currentEqTipo === "multipla" ? "" : "none";
   $("#eqCeBox").style.display = currentEqTipo === "ce" ? "" : "none";
   $("#eqLacunaBox").style.display = currentEqTipo === "lacuna" ? "" : "none";
+  if(currentEqTipo === "lacuna") syncEqLacunaFields();
 }
 
 function renderManage(preselectProj, preselectTema){
@@ -2437,7 +2690,7 @@ function renderManage(preselectProj, preselectTema){
     const tp = tipoOf(q);
     let gabHtml = "";
     if(tp === "lacuna"){
-      gabHtml = `Lacuna: ${esc(q.correta)}`;
+      gabHtml = esc(formatLacunaManageSummary(q.correta));
     } else if(tp === "ce"){
       gabHtml = `Gabarito: ${q.correta==="c" ? "Certo" : "Errado"}`;
     } else {
@@ -2480,7 +2733,6 @@ function openEditModal(id, defaultProj, defaultTema){
   editingId = id || null;
   const q = id ? S.questions.find(x => x.id === id) : null;
   const tp = q ? tipoOf(q) : "multipla";
-  setEqModalTipo(tp);
 
   $("#editModalTitle").textContent = q ? "Editar questão" : "Nova questão";
   $("#eqProj").value = q ? projOf(q) : (defaultProj || S.settings.projeto || "Concurso ABDI");
@@ -2493,13 +2745,60 @@ function openEditModal(id, defaultProj, defaultTema){
   }
   $("#eqCorreta").value = (q && tp==="multipla") ? q.correta : "a";
   $("#eqCeCorreta").value = (q && tp==="ce") ? q.correta : "c";
-  $("#eqLacunaCorreta").value = (q && tp==="lacuna") ? q.correta : "";
+
+  if(q && tp === "lacuna"){
+    const spec = parseLacunaSpec(q.correta);
+    $("#eqLacunaOrdemLivre").checked = spec.ordemLivre;
+    setEqModalTipo(tp);
+    syncEqLacunaFields(spec.lacunas.map(arr => arr.join(" | ")));
+  } else {
+    $("#eqLacunaOrdemLivre").checked = false;
+    setEqModalTipo(tp);
+    syncEqLacunaFields([""]);
+  }
+
   $("#eqDif").value = q ? (q.dificuldade || "") : "";
   $("#eqExp").value = q ? (q.explicacao || "") : "";
   $("#editModal").classList.add("show");
 }
 
 function closeEditModal(){ $("#editModal").classList.remove("show"); editingId = null; }
+
+function refreshActiveQuizAfterEdit(q){
+  if(!$("#quiz").classList.contains("active") || !sess) return;
+  const curQ = sess.queue[sess.i];
+  if(!curQ || curQ.id !== q.id) return;
+  if(!sess.answered){
+    renderQ();
+    return;
+  }
+  const tp = tipoOf(q);
+  const meta=[];
+  meta.push(`<span class="tag">${esc(projOf(q))} › ${esc(temaOf(q))}</span>`);
+  meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
+  if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
+  meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
+  if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
+  $("#qmeta").innerHTML = meta.join("");
+  $("#exp").textContent = q.explicacao || "";
+
+  if(tp === "lacuna"){
+    const spec = parseLacunaSpec(q.correta);
+    const prevVals = Array.isArray(sess.picked) ? sess.picked : [String(sess.picked || "")];
+    const lacRes = checkLacunaMatch(prevVals, q.correta);
+    if(countBlanks(q.enunciado) > 0){
+      $("#enun").innerHTML = formatEnunciadoHtml(q.enunciado, true, spec);
+      $("#opts").innerHTML = "";
+      $$("#enun .lacuna-inline").forEach((inp, idx) => {
+        inp.value = prevVals[idx] || "";
+        inp.readOnly = true;
+        inp.classList.add(lacRes.perBlank[idx] ? "correct" : "wrong");
+      });
+    }
+  } else {
+    $("#enun").innerHTML = formatEnunciadoHtml(q.enunciado, false);
+  }
+}
 
 function saveQuestionModal(){
   const enun = $("#eqEnun").value.trim();
@@ -2521,13 +2820,19 @@ function saveQuestionModal(){
     opcoes = [{k:"c", t:"Certo"}, {k:"e", t:"Errado"}];
     correta = $("#eqCeCorreta").value;
   } else {
-    correta = $("#eqLacunaCorreta").value.trim();
-    if(!correta){ toast("Digite a resposta correta da lacuna."); return; }
+    const fieldVals = $$("#eqLacunaFields .eq-lacuna-item").map(inp => inp.value.trim());
+    if(!fieldVals.length || fieldVals.some(v => !v)){
+      toast("Preencha a resposta de todas as lacunas.");
+      return;
+    }
+    const livre = $("#eqLacunaOrdemLivre").checked;
+    correta = (livre ? "~ " : "") + fieldVals.join(" ;; ");
     opcoes = [];
   }
 
   ensureNotebookExists(finalTema, finalProj);
 
+  let updatedQ = null;
   if(editingId){
     const q = S.questions.find(x => x.id === editingId);
     if(q){
@@ -2539,6 +2844,7 @@ function saveQuestionModal(){
       q.tema = finalTema;
       q.dificuldade = $("#eqDif").value.trim();
       q.explicacao = $("#eqExp").value.trim();
+      updatedQ = q;
     }
     toast("Questão atualizada na memória.");
   } else {
@@ -2553,6 +2859,7 @@ function saveQuestionModal(){
     toast("Questão salva no caderno!");
   }
   save(); closeEditModal();
+  if(updatedQ) refreshActiveQuizAfterEdit(updatedQ);
   if($("#manage").classList.contains("active")) renderManage();
   if($("#home").classList.contains("active")) renderHome();
   if($("#notebooks").classList.contains("active")) renderNotebooks();
@@ -2591,10 +2898,12 @@ const SAMPLE = `enunciado,a,b,c,d,correta,projeto,tema,tipo,dificuldade,explicac
 "O que a mediana representa em uma distribuição?","A média dos valores","O valor que divide os dados ao meio","O valor mais frequente","A diferença entre máximo e mínimo",b,Concurso ABDI,Estatística,multipla,Fácil,"A mediana é o valor central: 50% dos dados ficam abaixo e 50% acima dela."
 "Em uma distribuição assimétrica à direita, qual relação é esperada?","Média < Mediana","Média = Mediana","Média > Mediana","Não há relação",c,Concurso ABDI,Estatística,multipla,Média,"Valores altos na cauda direita puxam a média para cima, acima da mediana."
 "A ___ (sigla) é a lei brasileira (Lei nº 13.709/2018) que regula a proteção e o tratamento de dados pessoais.",,,,,LGPD | Lei Geral de Proteção de Dados,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Fácil,"A LGPD entrou em vigor em 2020 e aplica-se a pessoas físicas e jurídicas, de direito público ou privado."
+"O contrato de gestão celebrado com a ABDI estipula ___ e ___ para avaliação de desempenho.",,,,,limites ;; critérios,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Média,"Exemplo de questão com duas lacunas em ordem fixa separadas por ;;."
+"Entre os princípios expressos da administração pública no art. 37 da Constituição, destacam-se ___ e ___.",,,,,~ publicidade ;; eficiência | eficiencia,Concurso ABDI,Políticas Públicas e LGPD,lacuna,Média,"Exemplo de questão em ordem livre (prefixo ~): os termos podem ser preenchidos em qualquer ordem."
 "Segundo a LGPD, o tratamento de dados pessoais sensíveis dispensa qualquer hipótese legal quando realizado pelo poder público.",,,,,Errado,Concurso ABDI,Políticas Públicas e LGPD,ce,Média,"Errado. O poder público também deve observar as bases legais restritas do art. 11 da LGPD para tratar dados sensíveis."
 "O índice de Gini mede o quê?","Inflação acumulada","Desigualdade de distribuição","Crescimento do PIB","Taxa de desemprego",b,Concurso ABDI,Economia e Indicadores,multipla,Média,"Varia de 0 (igualdade total) a 1 (concentração máxima) e é muito usado para medir desigualdade de renda."
 "Qual estrutura de dados nativa do Python oferece verificação de pertencimento (x in s) em tempo médio O(1) usando tabela hash?",,,,,set | conjunto | dict,Tecnologia e Dados,Python,lacuna,Fácil,"Tanto set quanto dict utilizam hashing, garantindo busca em tempo constante O(1) no caso médio."
-"Em SQL, a cláusula ___ é utilizada para filtrar grupos criados após o GROUP BY.",,,,,HAVING,Tecnologia e Dados,Banco de Dados e SQL,lacuna,Média,"WHERE filtra linhas individuais antes do agrupamento; HAVING filtra os grupos agregados."
+"Em SQL, a cláusula ___ filtra linhas antes do agrupamento, enquanto ___ filtra os grupos criados após o GROUP BY.",,,,,WHERE ;; HAVING,Tecnologia e Dados,Banco de Dados e SQL,lacuna,Média,"WHERE atua nas linhas individuais antes do GROUP BY; HAVING filtra os grupos agregados."
 "Em problemas de classificação binária com classes muito desbalanceadas, a acurácia simples isolada é suficiente para avaliar a qualidade do modelo.",,,,,Errado,Tecnologia e Dados,Machine Learning,ce,Difícil,"Errado. Em bases desbalanceadas, um modelo pode ter alta acurácia apenas chutando a classe majoritária; métricas como F1-Score e ROC-AUC são necessárias."`;
 
 function downloadSample(){
@@ -2654,6 +2963,7 @@ window.addEventListener("keydown", e => {
 /* ---------- eventos ---------- */
 $$("#modes .mode").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled) startSession(b.dataset.mode); }));
 $$("#eqTipoSeg button").forEach(b=> b.addEventListener("click", ()=>setEqModalTipo(b.dataset.tipo)));
+$("#eqEnun").addEventListener("input", ()=>{ if(currentEqTipo === "lacuna") syncEqLacunaFields(); });
 
 function openImportView(prefillProj, prefillTema){
   updateDatalists();
