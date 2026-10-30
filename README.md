@@ -8,6 +8,8 @@ Uma aplicação web leve, rápida e 100% *offline-first* (PWA) para estudo ativo
 
 ## ✨ Principais Funcionalidades
 
+- **📚 Tela Inicial de Cadernos Temáticos:** Organize seus estudos por matéria/disciplina em **Cadernos Temáticos** independentes (ou use o *Caderno Geral* para estudar tudo misturado). Cada caderno exibe seu próprio progresso, questões vencidas hoje e acurácia.
+- **🖥️ Layout Widescreen Responsivo (Desktop & Mobile):** Interface ampla em múltiplas colunas para telas de computador (até `1120px`), mantendo ergonomia de aplicativo móvel no celular.
 - **🎯 Revisão Inteligente (Sistema de Leitner):** Cada questão possui uma caixa de `1` a `5`. Ao acertar, a questão avança de caixa e tem sua revisão espaçada no tempo (`1`, `3`, `7`, `16` e `35` dias por padrão, totalmente configurável). Ao errar, ela retorna à Caixa 1 para fixação imediata.
 - **⏱️ Modo Simulado (Modo Prova + Cronômetro):** Responda a uma seleção aleatória de questões com cronômetro em tempo real. No *Modo Prova*, o gabarito e as explicações só são revelados ao final da sessão, junto com o tempo total e o tempo médio por questão.
 - **✂️ Eliminação de Alternativas (Riscar Opções):** Descarte alternativas durante a leitura clicando no botão `✂` (ou com o botão direito do mouse), exatamente como em uma prova física.
@@ -15,10 +17,10 @@ Uma aplicação web leve, rápida e 100% *offline-first* (PWA) para estudo ativo
   - `A`–`E` ou `1`–`5`: Seleciona a alternativa correspondente
   - `Enter` ou `Espaço`: Confirma a resposta / Avança para a próxima questão
   - `Esc`: Sai da sessão ou fecha janelas modais
-- **🗂️ Gerenciador de Questões Integrado:** Busque questões por palavra-chave, filtre por tema, crie novas questões manualmente, edite enunciados/gabaritos ou exclua itens individuais.
-- **📊 Estatísticas & Ofensiva (Streak):** Acompanhe sua acurácia global e por disciplina, dias seguidos de estudo (ofensiva 🔥), gráfico de atividade dos últimos 7 dias e distribuição do banco nas 5 Caixas de Leitner.
+- **🗂️ Gerenciador de Questões Integrado:** Busque questões por palavra-chave, filtre por caderno, crie novas questões manualmente, edite enunciados/gabaritos ou exclua itens individuais.
+- **📊 Estatísticas & Ofensiva (Streak):** Acompanhe sua acurácia global e por caderno, dias seguidos de estudo (ofensiva 🔥), gráfico de atividade dos últimos 7 dias e distribuição do banco nas 5 Caixas de Leitner.
 - **🌓 Tema Claro, Escuro ou Automático:** Adapta-se ao sistema operacional ou permite escolha manual nos Ajustes.
-- **📱 Instalável (PWA) & Privacidade Total:** Funciona sem internet após o primeiro acesso e armazena todos os seus dados localmente no navegador (`localStorage`), com opção de **Exportar / Importar Backup Completo em JSON**.
+- **💾 Memória Persistente Dupla (`localStorage` + `IndexedDB`):** Todas as questões e cadernos adicionados ficam salvos automaticamente no armazenamento permanente do navegador, com opção de **Exportar / Restaurar Backup Completo em JSON**.
 
 ---
 

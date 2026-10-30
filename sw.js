@@ -1,4 +1,4 @@
-const CACHE_NAME = "qdequestao-v2";
+const CACHE_NAME = "qdequestao-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -21,20 +21,19 @@ self.addEventListener("activate", event => {
   );
 });
 
+// Estratégia Network-First: no Netlify sempre busca a versão mais recente quando online,
+// e usa o cache quando estiver sem internet.
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetched = fetch(event.request)
-        .then(response => {
-          if (response && response.status === 200 && response.type === "basic") {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetched;
-    })
+    fetch(event.request)
+      .then(response => {
+        if (response && response.status === 200 && response.type === "basic") {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
