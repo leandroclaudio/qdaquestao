@@ -71,7 +71,7 @@
   .save-pill{
     display:none;align-items:center;gap:6px;font:600 11.5px/1 var(--mono);
     color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 25%,var(--line));
-    padding:6px 10px;border-radius:99px;
+    padding:6px 10px;border-radius:99px;cursor:pointer;
   }
   @media(min-width:680px){ .save-pill{display:inline-flex} }
   .navbtn{
@@ -893,6 +893,23 @@ Regras:
         </div>
 
         <div class="card">
+          <h2>☁️ Sincronização Automática (PC e Celular)</h2>
+          <p class="lead" style="margin-bottom:12px">Crie uma <strong>chave secreta</strong> abaixo e digite a mesma chave no celular (só precisa fazer isso uma única vez em cada aparelho). Tudo será sincronizado automaticamente na nuvem.</p>
+          <label class="field" style="margin-top:0">Sua chave de sincronização</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <input type="text" id="syncKeyInput" placeholder="Ex.: leandro-abdi-2026" autocomplete="off" autocapitalize="none" spellcheck="false" style="flex:1;min-width:200px;font-family:var(--mono)">
+            <button class="btn auto" id="btnSaveSyncKey">☁️ Conectar</button>
+          </div>
+          <div class="row" id="syncActionsRow" style="display:none;margin-bottom:10px">
+            <button class="btn sm ghost" id="btnSyncNow">🔄 Sincronizar agora</button>
+            <button class="btn sm ghost" id="btnDisconnectSync">Desconectar chave</button>
+          </div>
+          <div id="syncStatusBox" style="font:600 12px/1.4 var(--mono);padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-soft)">
+            ⚪ Nuvem desconectada (salvando apenas neste aparelho)
+          </div>
+        </div>
+
+        <div class="card">
           <h2>Memória e Backup (Netlify / Local)</h2>
           <p class="lead" style="margin-bottom:12px">Suas questões são gravadas automaticamente no <strong>armazenamento permanente deste navegador</strong> (LocalStorage + IndexedDB). Exporte um backup JSON quando quiser levar seus projetos para outro dispositivo.</p>
           <div class="row" style="margin-bottom:10px">
@@ -1137,8 +1154,15 @@ const ICON_PALETTE = [
   "📘","🏢","📑","🚀","🏆","⚡","🎓","📝"
 ];
 
+const SYNC_KEY_STORAGE = "bq_sync_key_v1";
+const SYNC_ENDPOINT = "/.netlify/functions/sync";
+let syncInFlight = false;
+let syncPushTimer = null;
+let lastSyncTime = 0;
+let lastSyncError = "";
+
 const defaultState = () => ({
-  v:3, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
+  v:3, updatedAt:0, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
   settings:{
     shuffleOpts:true, shuffleQ:true, simSize:10, simExam:true,
     projeto:"", tema:"", dificuldade:"", tipo:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
@@ -1201,6 +1225,7 @@ let S = load();
 
 function normalizeLoadedState(s){
   const def = defaultState();
+  s.updatedAt = typeof s.updatedAt === "number" ? s.updatedAt : 0;
   s.settings = Object.assign(def.settings, s.settings||{});
   s.questions = Array.isArray(s.questions) ? s.questions : [];
   s.history = Array.isArray(s.history) ? s.history : [];
@@ -1283,26 +1308,257 @@ function load(){
   }catch(e){}
   return defaultState();
 }
+function getSyncKey(){
+  return String(Store.get(SYNC_KEY_STORAGE) || "").trim();
+}
+function setSyncKey(k){
+  const clean = String(k || "").trim();
+  Store.set(SYNC_KEY_STORAGE, clean);
+  updateSavePill();
+  updateSyncUI();
+}
+
 function updateSavePill(){
   const el = document.getElementById("saveStatus");
-  if(el) el.textContent = `💾 Salvo (${S.questions.length} q)`;
+  if(!el) return;
+  const sk = getSyncKey();
+  if(syncInFlight){
+    el.textContent = `⏳ Sincronizando...`;
+    el.title = "Sincronizando seus dados com a nuvem...";
+  } else if(sk){
+    if(lastSyncError){
+      el.textContent = `⚠️ Salvo local (${S.questions.length} q)`;
+      el.title = `Salvo neste aparelho. Aviso da nuvem: ${lastSyncError}`;
+    } else {
+      el.textContent = `☁️ Sincronizado (${S.questions.length} q)`;
+      el.title = "Sincronizado na nuvem (PC e Celular). Clique para abrir os Ajustes.";
+    }
+  } else {
+    el.textContent = `💾 Salvo (${S.questions.length} q)`;
+    el.title = "Salvo neste navegador. Clique para ativar a sincronização entre PC e Celular.";
+  }
 }
-function save(){
+
+function updateSyncUI(){
+  const inp = document.getElementById("syncKeyInput");
+  const row = document.getElementById("syncActionsRow");
+  const box = document.getElementById("syncStatusBox");
+  const btn = document.getElementById("btnSaveSyncKey");
+  if(!inp || !box) return;
+  const sk = getSyncKey();
+  if(document.activeElement !== inp && sk && !inp.value){
+    inp.value = sk;
+  }
+  if(sk){
+    if(row) row.style.display = "flex";
+    if(btn) btn.textContent = "☁️ Salvar chave";
+    if(syncInFlight){
+      box.style.color = "var(--accent)";
+      box.textContent = `⏳ Sincronizando com a nuvem (chave: ${sk})...`;
+    } else if(lastSyncError){
+      box.style.color = "var(--warn)";
+      box.textContent = `⚠️ Chave ativa (${sk}), mas sem conexão com a nuvem no momento: ${lastSyncError}`;
+    } else {
+      box.style.color = "var(--ok)";
+      const timeStr = lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "agora";
+      box.textContent = `🟢 Conectado na nuvem com a chave "${sk}" (${S.questions.length} questões sincronizadas às ${timeStr})`;
+    }
+  } else {
+    if(row) row.style.display = "none";
+    if(btn) btn.textContent = "☁️ Conectar";
+    box.style.color = "var(--ink-soft)";
+    box.textContent = "⚪ Nuvem desconectada (salvando apenas neste aparelho)";
+  }
+}
+
+function save(opts){
+  if(!opts || !opts.fromCloud){
+    S.updatedAt = now();
+  }
   compactOldHistory(S);
   Store.set(KEY, JSON.stringify(S));
   updateSavePill();
+  if(!opts || !opts.fromCloud){
+    scheduleCloudPush();
+  }
 }
 
-Store.recoverFromIDB(KEY).then(idbRaw => {
+function scheduleCloudPush(){
+  if(!getSyncKey()) return;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = setTimeout(() => {
+    syncPushTimer = null;
+    pushToCloud({ silent: true });
+  }, 700);
+}
+
+async function pushToCloud(opts){
+  const sk = getSyncKey();
+  if(!sk) return false;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = null;
+  if(!S.updatedAt) S.updatedAt = now();
+  syncInFlight = true;
+  updateSavePill();
+  updateSyncUI();
+  try{
+    const bodyStr = JSON.stringify(S);
+    const res = await fetch(SYNC_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-sync-key": sk },
+      body: bodyStr,
+      keepalive: Boolean(opts && opts.keepalive && bodyStr.length < 60000)
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok || !data.ok){
+      throw new Error(data.error || `Erro HTTP ${res.status}`);
+    }
+    lastSyncTime = now();
+    lastSyncError = "";
+    syncInFlight = false;
+    updateSavePill();
+    updateSyncUI();
+    if(opts && opts.manual) toast("Dados sincronizados na nuvem!");
+    return true;
+  }catch(err){
+    lastSyncError = err && err.message ? err.message : "Falha de rede";
+    syncInFlight = false;
+    updateSavePill();
+    updateSyncUI();
+    if(opts && opts.manual) toast(`Não foi possível sincronizar: ${lastSyncError}`);
+    return false;
+  }
+}
+
+function refreshAllViews(){
+  applyTheme();
+  updateSavePill();
+  updateSyncUI();
+  const elProj = document.getElementById("projects");
+  const elNb = document.getElementById("notebooks");
+  const elHome = document.getElementById("home");
+  const elMan = document.getElementById("manage");
+  const elStats = document.getElementById("stats");
+  const elSet = document.getElementById("settings");
+  if(elProj && elProj.classList.contains("active")) renderProjects();
+  if(elNb && elNb.classList.contains("active")) renderNotebooks();
+  if(elHome && elHome.classList.contains("active")) renderHome();
+  if(elMan && elMan.classList.contains("active")) renderManage($("#qFilterProj").value || "", $("#qFilterTema").value || "");
+  if(elStats && elStats.classList.contains("active")) renderStats();
+  if(elSet && elSet.classList.contains("active")) renderSettings();
+}
+
+async function syncWithCloud(opts){
+  const sk = getSyncKey();
+  if(!sk) return;
+  if(syncPushTimer && !(opts && opts.onConnect)){
+    await pushToCloud({ silent: true });
+    return;
+  }
+  syncInFlight = true;
+  updateSavePill();
+  updateSyncUI();
+  try{
+    const res = await fetch(SYNC_ENDPOINT, {
+      method: "GET",
+      headers: { "x-sync-key": sk },
+      cache: "no-store"
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok || !data.ok){
+      throw new Error(data.error || `Erro HTTP ${res.status}`);
+    }
+    const localHasData = S.questions.length > 0 || S.projects.length > 0 || S.notebooks.length > 0;
+    if(data.empty || !data.state){
+      syncInFlight = false;
+      if(localHasData){
+        await pushToCloud({ manual: Boolean(opts && (opts.manual || opts.onConnect)) });
+      } else {
+        lastSyncTime = now();
+        lastSyncError = "";
+        updateSavePill();
+        updateSyncUI();
+        if(opts && (opts.manual || opts.onConnect)) toast("Chave conectada! Seus próximos cadernos e questões serão sincronizados.");
+      }
+      return;
+    }
+
+    const cloudState = normalizeLoadedState(data.state);
+    const cloudUpdated = cloudState.updatedAt || 0;
+    const localUpdated = S.updatedAt || 0;
+    const cloudHasData = cloudState.questions.length > 0 || cloudState.projects.length > 0 || cloudState.notebooks.length > 0;
+
+    if(!localHasData || cloudUpdated > localUpdated || (opts && opts.onConnect && cloudHasData && localUpdated === 0)){
+      S = cloudState;
+      if(!S.updatedAt) S.updatedAt = cloudUpdated || now();
+      save({ fromCloud: true });
+      lastSyncTime = now();
+      lastSyncError = "";
+      syncInFlight = false;
+      refreshAllViews();
+      if(opts && (opts.manual || opts.onConnect)){
+        toast(`Sincronizado! ${S.questions.length} questões carregadas da nuvem.`);
+      }
+    } else if(opts && opts.onConnect && cloudHasData && localHasData && localUpdated > cloudUpdated){
+      syncInFlight = false;
+      updateSavePill();
+      updateSyncUI();
+      showConfirm(
+        `Esta chave já possui ${cloudState.questions.length} questões salvas na nuvem, e este aparelho possui ${S.questions.length} questões locais. Deseja carregar os dados da nuvem neste aparelho?`,
+        "Carregar da nuvem",
+        () => {
+          S = cloudState;
+          if(!S.updatedAt) S.updatedAt = now();
+          save({ fromCloud: true });
+          lastSyncTime = now();
+          lastSyncError = "";
+          refreshAllViews();
+          toast(`Sincronizado! ${S.questions.length} questões carregadas da nuvem.`);
+        }
+      );
+    } else if(localUpdated > cloudUpdated){
+      syncInFlight = false;
+      await pushToCloud({ manual: Boolean(opts && (opts.manual || opts.onConnect)) });
+    } else {
+      lastSyncTime = now();
+      lastSyncError = "";
+      syncInFlight = false;
+      updateSavePill();
+      updateSyncUI();
+      if(opts && (opts.manual || opts.onConnect)){
+        toast("Tudo atualizado entre este aparelho e a nuvem!");
+      }
+    }
+  }catch(err){
+    lastSyncError = err && err.message ? err.message : "Falha de rede";
+    syncInFlight = false;
+    updateSavePill();
+    updateSyncUI();
+    if(opts && (opts.manual || opts.onConnect)){
+      toast(`Erro ao sincronizar: ${lastSyncError}`);
+    }
+  }
+}
+
+Promise.all([
+  Store.recoverFromIDB(KEY),
+  Store.recoverFromIDB(SYNC_KEY_STORAGE)
+]).then(([idbRaw, idbSyncKey]) => {
   if(idbRaw && S.questions.length === 0 && S.projects.length === 0){
     try{
       const recovered = normalizeLoadedState(JSON.parse(idbRaw));
       if(recovered.questions.length > 0 || recovered.projects.length > 0 || recovered.notebooks.length > 0){
         S = recovered;
-        save();
+        save({ fromCloud: true });
         renderProjects();
       }
     }catch(e){}
+  }
+  if(idbSyncKey && !getSyncKey()){
+    Store.set(SYNC_KEY_STORAGE, String(idbSyncKey).trim());
+  }
+  if(getSyncKey()){
+    syncWithCloud({ silent: true });
   }
 });
 
@@ -3222,6 +3478,8 @@ function renderSettings(){
   $$("#simSize button").forEach(b=>b.classList.toggle("on", Number(b.dataset.n)===S.settings.simSize));
   $$("#themeSeg button").forEach(b=>b.classList.toggle("on", b.dataset.theme===(S.settings.theme||"auto")));
   $$("#intervals input").forEach(inp=>{ inp.value = ivDays(Number(inp.dataset.box)); });
+  $("#syncKeyInput").value = getSyncKey();
+  updateSyncUI();
 }
 
 /* ---------- exportar / importar dados ---------- */
@@ -3455,10 +3713,62 @@ $("#impData").addEventListener("click", ()=>$("#jsonFile").click());
 $("#jsonFile").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) importDataFile(f); });
 $("#clearAll").addEventListener("click", ()=> showConfirm("Apagar TODOS os projetos, cadernos, questões e o progresso deste navegador? Isso não pode ser desfeito.", "Apagar tudo", ()=>{ S=defaultState(); save(); applyTheme(); goProjects(); renderSettings(); toast("Tudo apagado."); }));
 
+function handleSaveSyncKey(){
+  const raw = ($("#syncKeyInput").value || "").trim();
+  if(raw.length < 3){
+    toast("Digite uma chave com pelo menos 3 caracteres.");
+    $("#syncKeyInput").focus();
+    return;
+  }
+  setSyncKey(raw);
+  syncWithCloud({ onConnect: true, manual: true });
+}
+$("#btnSaveSyncKey").addEventListener("click", handleSaveSyncKey);
+$("#syncKeyInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); handleSaveSyncKey(); }
+});
+$("#btnSyncNow").addEventListener("click", ()=>syncWithCloud({ manual: true }));
+$("#btnDisconnectSync").addEventListener("click", ()=>{
+  setSyncKey("");
+  $("#syncKeyInput").value = "";
+  lastSyncError = "";
+  lastSyncTime = 0;
+  updateSavePill();
+  updateSyncUI();
+  toast("Chave desconectada deste aparelho.");
+});
+$("#saveStatus").addEventListener("click", ()=>{
+  renderSettings();
+  show("settings");
+  if(getSyncKey()) syncWithCloud({ manual: true });
+});
+
+document.addEventListener("visibilitychange", () => {
+  if(!getSyncKey()) return;
+  if(document.visibilityState === "hidden"){
+    if(syncPushTimer){
+      pushToCloud({ silent: true, keepalive: true });
+    }
+  } else if(document.visibilityState === "visible"){
+    if(!sess){
+      syncWithCloud({ silent: true });
+    }
+  }
+});
+window.addEventListener("online", () => {
+  if(getSyncKey() && !sess){
+    syncWithCloud({ silent: true });
+  }
+});
+
 /* ---------- init & PWA ---------- */
 applyTheme();
 renderProjects();
 updateSavePill();
+updateSyncUI();
+if(getSyncKey()){
+  syncWithCloud({ silent: true });
+}
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
 }
