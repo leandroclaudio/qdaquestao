@@ -156,6 +156,7 @@
   .desktop-nav .navbtn.active{
     background:var(--surface);color:var(--accent);border-color:var(--line);box-shadow:var(--shadow-sm);font-weight:700;
   }
+  .navbtn .nav-ic{width:16px;height:16px;flex:none;stroke-width:2;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
   .desktop-nav .navbtn .lbl{display:none}
   @media(min-width:940px){ .desktop-nav .navbtn .lbl{display:inline} }
 
@@ -400,7 +401,6 @@
   .progressbar{flex:1;height:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
   .progressbar i{display:block;height:100%;background:var(--btn-grad);width:0;border-radius:99px;transition:width .3s ease}
   .qcount{font:700 12.5px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-soft);white-space:nowrap}
-  .qtimer{font:700 12px/1 var(--mono);font-variant-numeric:tabular-nums;color:var(--accent);background:var(--accent-soft);padding:6px 9px;border-radius:8px;white-space:nowrap}
   .qmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
   .tag{
     font:600 11px/1.1 var(--mono);letter-spacing:.02em;color:var(--ink-soft);
@@ -679,13 +679,13 @@
     .q-toolbar select{width:auto;min-width:155px}
   }
   .q-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:18px}
-  @media(min-width:820px){ .q-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px} }
+  @media(min-width:820px){ .q-grid{gap:10px} }
   .q-item{
     background:var(--surface);border:1px solid var(--line);border-radius:16px;
-    padding:15px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between;min-width:0;
+    padding:12px 16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;justify-content:space-between;min-width:0;
   }
   .q-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-  .q-item-title{font-weight:650;font-size:14.5px;line-height:1.45;margin-bottom:10px;flex:1;min-width:0;overflow-wrap:break-word}
+  .q-item-title{font-weight:650;font-size:14.5px;line-height:1.45;margin-bottom:6px;flex:1;min-width:0;overflow-wrap:break-word}
   .q-item-actions{display:flex;gap:6px;flex:none}
   .mini-btn{
     border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-family:var(--sans);
@@ -708,11 +708,11 @@
     <span class="spacer"></span>
     <span class="save-pill" id="saveStatus" title="Salvo automaticamente na memória permanente deste navegador">💾 Salvo</span>
     <nav class="desktop-nav" aria-label="Navegação principal">
-      <button class="navbtn active" id="navProjects" data-nav="projects" title="Meus Projetos">🏛️ <span class="lbl">Projetos</span></button>
-      <button class="navbtn" id="navManage" data-nav="manage" title="Banco de Questões">🗂️ <span class="lbl">Questões</span></button>
-      <button class="navbtn" id="navStats" data-nav="stats" title="Estatísticas">📊 <span class="lbl">Estatísticas</span></button>
-      <button class="navbtn" id="navWiki" data-nav="wiki" title="Guia e Wiki do App">📖 <span class="lbl">Guia</span></button>
-      <button class="navbtn" id="navSettings" data-nav="settings" title="Ajustes">⚙️ <span class="lbl">Ajustes</span></button>
+      <button class="navbtn active" id="navProjects" data-nav="projects" title="Meus Projetos"><svg class="nav-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> <span class="lbl">Projetos</span></button>
+      <button class="navbtn" id="navManage" data-nav="manage" title="Banco de Questões"><svg class="nav-ic" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg> <span class="lbl">Questões</span></button>
+      <button class="navbtn" id="navStats" data-nav="stats" title="Estatísticas"><svg class="nav-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg> <span class="lbl">Estatísticas</span></button>
+      <button class="navbtn" id="navWiki" data-nav="wiki" title="Guia e Wiki do App"><svg class="nav-ic" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg> <span class="lbl">Guia</span></button>
+      <button class="navbtn" id="navSettings" data-nav="settings" title="Ajustes"><svg class="nav-ic" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span class="lbl">Ajustes</span></button>
     </nav>
   </div>
 </div>
@@ -744,10 +744,10 @@
     </div>
 
     <div class="stats-row">
-      <div class="stat"><div class="num" id="prCount">0</div><div class="lab">Projetos ativos</div></div>
       <div class="stat"><div class="num due" id="prDue">0</div><div class="lab">Para revisar hoje</div></div>
       <div class="stat"><div class="num" id="prTotalQ">0</div><div class="lab">Total de questões</div></div>
-      <div class="stat"><div class="num streak" id="prStreak">0d 🔥</div><div class="lab">Ofensiva / Acurácia <span id="prAcc">—</span></div></div>
+      <div class="stat"><div class="num" id="prAcc">—</div><div class="lab">Acurácia geral</div></div>
+      <div class="stat"><div class="num streak" id="prStreak">0d 🔥</div><div class="lab">Ofensiva (dias seguidos)</div></div>
     </div>
 
     <div class="nb-grid" id="prGrid"></div>
@@ -813,22 +813,22 @@
         <div class="modes" id="modes">
           <button class="mode" data-mode="revisao">
             <span class="ic">🎯</span>
-            <span><span class="tt">Revisão inteligente</span><span class="ss">Repetição espaçada do que vence hoje neste caderno</span></span>
+            <span><span class="tt">Revisão inteligente</span><span class="ss">O que vence hoje pela repetição espaçada</span></span>
             <span class="ct" id="ctRevisao">0</span>
           </button>
           <button class="mode" data-mode="erradas">
             <span class="ic">↺</span>
-            <span><span class="tt">Só as que errei</span><span class="ss">Refaz as questões que você errou por último</span></span>
+            <span><span class="tt">Erradas na última vez</span><span class="ss">Questões cuja resposta mais recente foi errada</span></span>
             <span class="ct" id="ctErradas">0</span>
           </button>
           <button class="mode" data-mode="todas">
             <span class="ic">≡</span>
-            <span><span class="tt">Todas do caderno</span><span class="ss">Pratica todas as questões deste caderno</span></span>
+            <span><span class="tt">Todas as questões</span><span class="ss">Pratica tudo, vencido ou não</span></span>
             <span class="ct" id="ctTodas">0</span>
           </button>
           <button class="mode" data-mode="problematicas">
             <span class="ic">⚠</span>
-            <span><span class="tt">Questões problemáticas</span><span class="ss">Questões com 4 ou mais erros e acerto abaixo de 50%</span></span>
+            <span><span class="tt">Pontos fracos</span><span class="ss">Histórico ruim: 4 ou mais erros e menos de 50% de acerto</span></span>
             <span class="ct" id="ctProblematicas">0</span>
           </button>
         </div>
@@ -836,7 +836,7 @@
 
       <div>
         <div class="card">
-          <h2>Desempenho neste caderno</h2>
+          <h2 id="nbPerfTitle">Desempenho neste caderno</h2>
           <div class="stats-row nb-mini-stats">
             <div class="stat"><div class="num due" id="sDue">0</div><div class="lab">Para hoje</div></div>
             <div class="stat"><div class="num" id="sTotal">0</div><div class="lab">Questões</div></div>
@@ -855,7 +855,6 @@
       <div class="qhead">
         <button class="navbtn" id="quizBack" title="Sair (Esc)">← Sair</button>
         <div class="progressbar"><i id="prog"></i></div>
-        <span class="qtimer" id="qtimer">00:00</span>
         <span class="qcount" id="qcount">0/0</span>
       </div>
       <div class="quiz-card">
@@ -980,7 +979,6 @@
       </select>
     </div>
     <div class="q-grid" id="qList"></div>
-    <button class="btn ghost back-foot-btn" id="manBack">Voltar</button>
   </section>
 
   <!-- STATS -->
@@ -1022,7 +1020,6 @@
       <h2>Acurácia por Caderno Temático</h2>
       <div id="temaList"><div class="empty"><div class="big">📊</div>Sem dados ainda.</div></div>
     </div>
-    <button class="btn ghost back-foot-btn" id="stBack">Voltar</button>
   </section>
 
   <!-- WIKI / GUIA DO APP -->
@@ -1061,7 +1058,7 @@
         <ul style="font-size:13.5px;padding-left:18px;color:var(--ink-soft);margin:8px 0 0">
           <li><strong>Ao importar ou criar uma questão:</strong> Ela entra na <strong>Caixa 1</strong> com vencimento imediato (aparece em <em>Para hoje</em>).</li>
           <li><strong>Ao ACERTAR a questão:</strong> A próxima revisão é agendada usando o intervalo da <strong>caixa em que a questão estava</strong> (início do dia local + N dias) e, em seguida, ela sobe 1 caixa. Por exemplo: acertar na Caixa 1 agenda <code>+1 dia</code> e move para a Caixa 2; acertar na Caixa 5 agenda <code>+35 dias</code> e permanece na Caixa 5.</li>
-          <li><strong>Ao acertar ANTES do vencimento</strong> (nos modos <em>Todas</em>, <em>Só as que errei</em> ou <em>Problemáticas</em>): o acerto conta nas estatísticas, mas a questão <strong>fica na mesma caixa e mantém a data de revisão</strong>. Assim, refazer a mesma questão várias vezes no dia não pula caixas.</li>
+          <li><strong>Ao acertar ANTES do vencimento</strong> (nos modos <em>Todas as questões</em>, <em>Erradas na última vez</em> ou <em>Pontos fracos</em>): o acerto conta nas estatísticas, mas a questão <strong>fica na mesma caixa e mantém a data de revisão</strong>. Assim, refazer a mesma questão várias vezes no dia não pula caixas.</li>
           <li><strong>Ao ERRAR a questão:</strong> Ela volta imediatamente para a <strong>Caixa 1</strong> com vencimento no mesmo dia, garantindo que você revise o ponto fraco até fixar.</li>
           <li><em>Dica:</em> Você pode personalizar os dias de cada caixa em <strong>⚙️ Ajustes</strong>!</li>
         </ul>
@@ -1152,7 +1149,6 @@ Regras:
 4. Retorne apenas o bloco CSV puro pronto para copiar.</div>
     </div>
 
-    <button class="btn ghost back-foot-btn" id="wikiBack">Voltar</button>
   </section>
 
   <!-- SETTINGS -->
@@ -1233,7 +1229,6 @@ Regras:
         </div>
       </div>
     </div>
-    <button class="btn ghost back-foot-btn" id="setBack">Voltar</button>
   </section>
 
 </div>
@@ -1249,7 +1244,7 @@ Regras:
   </button>
   <button class="bnav-btn" id="mNavStats" data-nav="stats">
     <span class="bnav-ic"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
-    <span>Dados</span>
+    <span>Estatísticas</span>
   </button>
   <button class="bnav-btn" id="mNavWiki" data-nav="wiki">
     <span class="bnav-ic"><svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>
@@ -2482,7 +2477,7 @@ function importCSV(text, fallbackProj, fallbackTema, modeOverride){
 /* ---------- repetição espaçada ---------- */
 function ivDays(box){ const a=S.settings.intervals||DEFAULT_INTERVALS; const v=a[box-1]; return (typeof v==="number" && v>=0) ? v : DEFAULT_INTERVALS[box-1]; }
 // Acerto só sobe de caixa se a questão estava vencida. Acertar antes da hora
-// (em "Todas", "Só as que errei" etc.) conta nas estatísticas, mas mantém a
+// (em "Todas as questões", "Erradas na última vez" etc.) conta nas estatísticas, mas mantém a
 // caixa e a data de revisão. Erro sempre volta para a Caixa 1.
 function promoteIfDue(q, wasDue){
   if(!wasDue) return false;
@@ -2595,7 +2590,6 @@ function renderProjects(){
   const { total: totHist, acertos: acHist } = globalHistoryTotals();
   const globalAcc = totHist ? Math.round(acHist/totHist*100)+"%" : "—";
 
-  $("#prCount").textContent = projs.length;
   $("#prDue").textContent = totalDue;
   const rvAll = $("#btnReviewAll");
   rvAll.textContent = totalDue ? `🎯 Revisar hoje (${totalDue})` : "✓ Nada para revisar hoje";
@@ -2603,7 +2597,7 @@ function renderProjects(){
   rvAll.style.display = empty ? "none" : "";
   $("#prTotalQ").textContent = totalQ;
   $("#prStreak").innerHTML = `${calcStreak()}d 🔥`;
-  $("#prAcc").textContent = `• ${globalAcc}`;
+  $("#prAcc").textContent = globalAcc;
 
   const cards = [];
 
@@ -2767,8 +2761,8 @@ function renderNotebooks(){
           <span class="nb-badge due">${totalDue} para hoje</span>
         </div>
         <div>
-          <h3 class="nb-title">Todos os Cadernos (${curProj || "Geral"})</h3>
-          <div class="nb-sub">Estudar todas as ${totalQ} questões deste projeto misturadas</div>
+          <h3 class="nb-title">Projeto inteiro</h3>
+          <div class="nb-sub">Todas as ${totalQ} questões do projeto, misturadas, com os mesmos modos de estudo de um caderno</div>
         </div>
         <div class="nb-prog"><i style="width:${progAll}%"></i></div>
         <div class="nb-badges">
@@ -2958,7 +2952,9 @@ function renderHome(){
   $("#backToNotebooks").textContent = projName ? `📂 ${projName}` : "📂 Cadernos";
   $("#curNbEyebrow").textContent = projName ? `Projeto: ${projName}` : "Todos os Projetos";
   const ic = nbName ? getNotebookIcon(nbName, projName) : "🌐";
-  $("#curNbTitle").textContent = nbName ? `${ic} ${nbName}` : `🌐 Todos os Cadernos (${projName || "Geral"})`;
+  $("#curNbTitle").textContent = nbName ? `${ic} ${nbName}` : "🌐 Projeto inteiro";
+  const escopo = nbName ? "deste caderno" : "deste projeto";
+  $("#nbPerfTitle").textContent = nbName ? "Desempenho neste caderno" : "Desempenho neste projeto";
 
   const base = pool();
   const total = base.length;
@@ -2980,8 +2976,8 @@ function renderHome(){
   $("#ctTodas").textContent = total;
   if($("#ctProblematicas")) $("#ctProblematicas").textContent = prob;
   $("#homeLead").textContent = total
-    ? "Escolha uma modalidade para treinar as questões deste caderno."
-    : "Este caderno ainda não tem questões. Use o menu ⋯ Mais para criar ou importar.";
+    ? `Escolha como estudar as questões ${escopo}.`
+    : `Ainda não há questões ${escopo}. Use o menu ⋯ Mais para criar ou importar.`;
   $$("#modes .mode").forEach(b=>{
     const m=b.dataset.mode;
     const n = m==="revisao"?due : m==="erradas"?err : m==="problematicas"?prob : total;
@@ -3009,16 +3005,6 @@ function renderHome(){
 let sess = null;
 let timerId = null;
 
-function startTimer(){
-  stopTimer();
-  const update = () => {
-    if(!sess) return;
-    const sec = (now() - sess.startTs)/1000;
-    $("#qtimer").textContent = fmtSeconds(sec);
-  };
-  update();
-  timerId = setInterval(update, 1000);
-}
 function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
 
 function buildQueue(mode){
@@ -3074,7 +3060,6 @@ function startSession(mode, customQueue, origin){
     answered:false, picked:null, eliminated:new Set(), startTs:now()
   };
   show("quiz");
-  startTimer();
   renderQ();
 }
 
@@ -3191,7 +3176,7 @@ function renderQ(){
   meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
-  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
+  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ ponto fraco</span>`);
   $("#qmeta").innerHTML = meta.join("");
 
   const spec = tp === "lacuna" ? parseLacunaSpec(q.correta) : null;
@@ -3797,7 +3782,7 @@ function renderManage(preselectProj, preselectTema){
           ${q.dificuldade ? `<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>` : ""}
           <span class="tag box">caixa ${q.box}/5</span>
           <span class="tag">✓ ${q.acertos} • ✕ ${q.erros}</span>
-          ${isProblematic(q) ? `<span class="tag dif-hard">⚠ problemática</span>` : ""}
+          ${isProblematic(q) ? `<span class="tag dif-hard">⚠ ponto fraco</span>` : ""}
         </div>
       </div>
       <div style="font-size:12.5px;color:var(--ok);font-weight:600;margin-top:4px">${gabHtml}</div>
@@ -3864,7 +3849,7 @@ function refreshActiveQuizAfterEdit(q){
   meta.push(`<span class="tag">${tipoBadgeLabel(tp)}</span>`);
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
-  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
+  if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ ponto fraco</span>`);
   $("#qmeta").innerHTML = meta.join("");
   $("#exp").textContent = q.explicacao || "";
 
@@ -4143,11 +4128,7 @@ $("#resHome").addEventListener("click", goProjects);
 $("#resRetryWrong").addEventListener("click", ()=>{
   if(sess && sess.wrong && sess.wrong.length){ startSession("erradas", sess.wrong.slice(), sess.origin); }
 });
-$("#stBack").addEventListener("click", goProjects);
-$("#wikiBack").addEventListener("click", goProjects);
-$("#setBack").addEventListener("click", goProjects);
 $("#impBack").addEventListener("click", goProjects);
-$("#manBack").addEventListener("click", goProjects);
 
 $("#qSearch").addEventListener("input", ()=>renderManage());
 $("#qFilterProj").addEventListener("change", ()=>renderManage($("#qFilterProj").value, ""));
