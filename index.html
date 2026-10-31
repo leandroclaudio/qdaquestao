@@ -1043,6 +1043,7 @@
         <ul style="font-size:13.5px;padding-left:18px;color:var(--ink-soft);margin:8px 0 0">
           <li><strong>Ao importar ou criar uma questão:</strong> Ela entra na <strong>Caixa 1</strong> com vencimento imediato (aparece em <em>Para hoje</em>).</li>
           <li><strong>Ao ACERTAR a questão:</strong> A próxima revisão é agendada usando o intervalo da <strong>caixa em que a questão estava</strong> (início do dia local + N dias) e, em seguida, ela sobe 1 caixa. Por exemplo: acertar na Caixa 1 agenda <code>+1 dia</code> e move para a Caixa 2; acertar na Caixa 5 agenda <code>+35 dias</code> e permanece na Caixa 5.</li>
+          <li><strong>Ao acertar ANTES do vencimento</strong> (nos modos <em>Todas</em>, <em>Só as que errei</em> ou <em>Problemáticas</em>): o acerto conta nas estatísticas, mas a questão <strong>fica na mesma caixa e mantém a data de revisão</strong>. Assim, refazer a mesma questão várias vezes no dia não pula caixas.</li>
           <li><strong>Ao ERRAR a questão:</strong> Ela volta imediatamente para a <strong>Caixa 1</strong> com vencimento no mesmo dia, garantindo que você revise o ponto fraco até fixar.</li>
           <li><em>Dica:</em> Você pode personalizar os dias de cada caixa em <strong>⚙️ Ajustes</strong>!</li>
         </ul>
@@ -2462,21 +2463,32 @@ function importCSV(text, fallbackProj, fallbackTema, modeOverride){
 
 /* ---------- repetição espaçada ---------- */
 function ivDays(box){ const a=S.settings.intervals||DEFAULT_INTERVALS; const v=a[box-1]; return (typeof v==="number" && v>=0) ? v : DEFAULT_INTERVALS[box-1]; }
+// Acerto só sobe de caixa se a questão estava vencida. Acertar antes da hora
+// (em "Todas", "Só as que errei" etc.) conta nas estatísticas, mas mantém a
+// caixa e a data de revisão. Erro sempre volta para a Caixa 1.
+function promoteIfDue(q, wasDue){
+  if(!wasDue) return false;
+  const prevBox = Math.min(5, Math.max(1, q.box || 1));
+  q.due = dueFromToday(ivDays(prevBox));
+  q.box = Math.min(5, prevBox + 1);
+  return true;
+}
 function gradeQuestion(q, ok){
+  const wasDue = isDue(q);
   q.vistas++;
   q.ultima = ok;
   S.history.push({qid:q.id, ok, t:now()});
+  let promoted = false;
   if(ok){
-    const prevBox = Math.min(5, Math.max(1, q.box || 1));
     q.acertos++;
-    q.due = dueFromToday(ivDays(prevBox));
-    q.box = Math.min(5, prevBox + 1);
+    promoted = promoteIfDue(q, wasDue);
   } else {
     q.erros++;
     q.box = 1;
     q.due = now();
   }
   save();
+  return { promoted, wasDue };
 }
 
 /* ---------- contagens / filtros ---------- */
@@ -3267,13 +3279,14 @@ function confirmAnswer(){
     due: q.due,
     acertos: q.acertos || 0,
     erros: q.erros || 0,
-    ultima: q.ultima
+    ultima: q.ultima,
+    wasDue: isDue(q)
   };
 
   sess.answered=true;
   sess.answers.push({ q, picked: recordedPick, ok });
   if(ok) sess.right++; else sess.wrong.push(q);
-  gradeQuestion(q, ok);
+  const grade = gradeQuestion(q, ok);
 
   if(tp === "lacuna"){
     const inps = $$("#enun .lacuna-inline, #opts #lacunaInput");
@@ -3303,7 +3316,7 @@ function confirmAnswer(){
 
   const fb=$("#feedback"); fb.className = "feedback show " + (ok?"ok":"no");
   if(ok){
-    $("#verdict").innerHTML = "✓ Acertou!";
+    $("#verdict").innerHTML = grade.promoted ? `✓ Acertou! <small>(foi para a caixa ${q.box})</small>` : "✓ Acertou! <small>(revisão antecipada: caixa mantida)</small>";
   } else if(tp === "lacuna"){
     let expSummary = "";
     if(lacRes.perBlank.length === 1){
@@ -3331,12 +3344,12 @@ function overrideLacunaAsCorrect(q){
     erros: Math.max(0, (q.erros || 1) - 1),
     ultima: q.ultima
   };
-  const prevBox = Math.min(5, Math.max(1, snap.box || 1));
   q.acertos = snap.acertos + 1;
   q.erros = snap.erros;
   q.ultima = true;
-  q.due = dueFromToday(ivDays(prevBox));
-  q.box = Math.min(5, prevBox + 1);
+  q.box = snap.box;
+  q.due = snap.due;
+  const promoted = promoteIfDue(q, snap.wasDue !== false);
   if(S.history.length) S.history[S.history.length - 1].ok = true;
   sess.right++;
   sess.wrong = sess.wrong.filter(x => x.id !== q.id);
@@ -3351,7 +3364,7 @@ function overrideLacunaAsCorrect(q){
   const boxTag = $("#qmeta .tag.box");
   if(boxTag) boxTag.textContent = `caixa ${q.box}/5`;
   $("#feedback").className = "feedback show ok";
-  $("#verdict").innerHTML = "✓ Considerado como acerto!";
+  $("#verdict").innerHTML = promoted ? "✓ Considerado como acerto!" : "✓ Considerado como acerto! <small>(revisão antecipada: caixa mantida)</small>";
   $("#overrideOkBtn").style.display = "none";
   toast("Resposta validada como correta!");
 }
