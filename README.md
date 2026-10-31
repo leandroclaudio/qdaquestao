@@ -11,13 +11,11 @@ Uma plataforma web leve, rápida, widescreen e 100% *offline-first* (PWA) para e
 - **🏛️ Hierarquia em 3 Níveis (`Projetos → Cadernos → Questões`):**
   - Crie **Projetos** para objetivos distintos (ex.: *Concurso ABDI*, *Certificação AWS*, *Pós-Graduação*) com ícone e descrição personalizados.
   - Dentro de cada projeto, crie **Cadernos Temáticos** para cada matéria do edital, escolhendo um **ícone exclusivo** em uma paleta visual (ou digitando qualquer emoji).
-  - Faça um **Simulado Geral do Projeto** (misturando todas as matérias daquele projeto) ou estude um caderno específico.
 - **✍️ 3 Formatos de Questão Suportados:**
   1. **Múltipla Escolha (`multipla`):** De 2 a 5 alternativas (`A` a `E`), com botão `✂` (ou clique direito) para riscar alternativas descartadas.
   2. **Certo ou Errado (`ce`):** Formato clássico de bancas como Cebraspe, com atalhos rápidos `C` e `E`.
   3. **Preencher Lacuna (`lacuna`):** Digite a resposta diretamente no teclado! Ignora maiúsculas/minúsculas e acentos, aceita múltiplos sinônimos separados por `|` (ex.: `LGPD | Lei 13.709`) e possui botão para validar manualmente respostas equivalentes.
 - **🎯 Revisão Inteligente (Sistema de Leitner):** Cada questão possui uma caixa de `1` a `5`. Ao acertar, a questão avança de caixa e tem sua revisão espaçada no tempo (`1`, `3`, `7`, `16` e `35` dias por padrão, totalmente configurável). Ao errar, ela retorna à Caixa 1 para revisão imediata no mesmo dia.
-- **⏱️ Modo Simulado (Modo Prova + Cronômetro):** No *Modo Prova*, o gabarito e as explicações só são revelados ao final da sessão, junto com o tempo total e o tempo médio por questão.
 - **📖 Wiki / Guia Interativo Integrado:** Botão **Como Funciona** na barra superior explicando visualmente o método de Leitner, as datas de revisão, a estrutura do CSV e trazendo um **Prompt pronto para copiar** e gerar questões com IA.
 - **📊 Estatísticas & Ofensiva (Streak):** Acompanhe sua acurácia global e por caderno, dias seguidos de estudo (ofensiva 🔥), gráfico de atividade dos últimos 7 dias e distribuição do banco nas 5 Caixas de Leitner.
 - **💾 Memória Persistente Dupla (`localStorage` + `IndexedDB`):** Todos os projetos, cadernos e questões ficam salvos automaticamente no armazenamento permanente do navegador, com opção de **Exportar / Restaurar Backup Completo em JSON**.

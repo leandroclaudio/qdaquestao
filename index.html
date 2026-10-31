@@ -751,12 +751,11 @@
       <div>
         <span class="eyebrow" id="curProjEyebrow">Projeto</span>
         <h1 id="curProjTitle">Concurso ABDI</h1>
-        <p class="lead" id="curProjDesc" style="margin-bottom:0">Escolha um caderno temático para estudar ou faça um simulado geral deste projeto.</p>
+        <p class="lead" id="curProjDesc" style="margin-bottom:0">Escolha um caderno temático para estudar.</p>
       </div>
       <div class="hero-actions">
         <button class="btn auto ghost" id="btnNewNotebook">＋ Novo Caderno</button>
         <button class="btn auto ghost" id="btnImportProj">📄 Importar CSV</button>
-        <button class="btn auto" id="btnProjSimulado">⏱ Simulado do Projeto</button>
       </div>
     </div>
 
@@ -813,11 +812,6 @@
             <span class="ic">⚠</span>
             <span><span class="tt">Questões problemáticas</span><span class="ss">Questões com 4 ou mais erros e acerto abaixo de 50%</span></span>
             <span class="ct" id="ctProblematicas">0</span>
-          </button>
-          <button class="mode" data-mode="simulado">
-            <span class="ic">⏱</span>
-            <span><span class="tt">Simulado do caderno</span><span class="ss" id="simSubLabel">Modo prova com cronômetro e placar final</span></span>
-            <span class="ct" id="ctSim">0</span>
           </button>
         </div>
       </div>
@@ -1024,7 +1018,7 @@
         <h2>1. Hierarquia: Projetos → Cadernos → Questões</h2>
         <p style="font-size:14px;color:var(--ink-soft)">O aplicativo organiza seus estudos em 3 níveis pensados para preparação de alto rendimento:</p>
         <ul style="font-size:14px;padding-left:18px;margin:8px 0">
-          <li><strong>🏛️ Projetos:</strong> Seu objetivo maior (ex.: <em>Concurso ABDI</em>, <em>Residência</em>, <em>Certificação AWS</em>). Permite isolar matérias de provas diferentes ou rodar um <strong>Simulado Geral do Projeto</strong>.</li>
+          <li><strong>🏛️ Projetos:</strong> Seu objetivo maior (ex.: <em>Concurso ABDI</em>, <em>Residência</em>, <em>Certificação AWS</em>). Permite isolar matérias de provas diferentes.</li>
           <li><strong>📚 Cadernos Temáticos:</strong> As disciplinas ou tópicos do edital dentro daquele projeto (ex.: <em>Estatística</em>, <em>LGPD</em>, <em>Python</em>). Você pode escolher um <strong>ícone exclusivo</strong> ao criar cada projeto ou caderno.</li>
           <li><strong>✍️ Questões:</strong> Suporta 3 formatos combinados dentro do mesmo caderno:
             <ul>
@@ -1163,14 +1157,6 @@ Regras:
           <div class="switch">
             <div><div class="lab">Embaralhar questões</div><div class="sub">Ordem aleatória nas sessões</div></div>
             <label class="toggle"><input type="checkbox" id="optShuffleQ"><span class="tr"></span><span class="kn"></span></label>
-          </div>
-          <div class="switch">
-            <div><div class="lab">Simulado modo prova</div><div class="sub">Oculta o gabarito durante o simulado e revela só no final</div></div>
-            <label class="toggle"><input type="checkbox" id="optSimExam"><span class="tr"></span><span class="kn"></span></label>
-          </div>
-          <label class="field">Questões por simulado</label>
-          <div class="seg" id="simSize">
-            <button data-n="10">10</button><button data-n="20">20</button><button data-n="30">30</button><button data-n="0">Todas</button>
           </div>
         </div>
 
@@ -1469,7 +1455,7 @@ let lastSyncError = "";
 const defaultState = () => ({
   v:3, updatedAt:0, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
   settings:{
-    shuffleOpts:true, shuffleQ:true, simSize:10, simExam:true,
+    shuffleOpts:true, shuffleQ:true,
     projeto:"", tema:"", dificuldade:"", tipo:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
   }
 });
@@ -1532,6 +1518,7 @@ function normalizeLoadedState(s){
   const def = defaultState();
   s.updatedAt = typeof s.updatedAt === "number" ? s.updatedAt : 0;
   s.settings = Object.assign(def.settings, s.settings||{});
+  delete s.settings.simSize; delete s.settings.simExam;
   s.questions = Array.isArray(s.questions) ? s.questions : [];
   s.history = Array.isArray(s.history) ? s.history : [];
   s.historyDaily = (s.historyDaily && typeof s.historyDaily === "object" && !Array.isArray(s.historyDaily)) ? s.historyDaily : {};
@@ -2593,13 +2580,12 @@ function renderNotebooks(){
   const projObj = curProj ? allProjectsList().find(p => norm(p.name)===norm(curProj)) : null;
   $("#curProjEyebrow").textContent = curProj ? "Projeto Selecionado" : "Visão Global";
   $("#curProjTitle").textContent = projObj ? `${projObj.icon} ${projObj.name}` : (curProj ? `🏛️ ${curProj}` : "🌐 Todos os Projetos");
-  $("#curProjDesc").textContent = (projObj && projObj.desc) ? projObj.desc : "Escolha um caderno temático para estudar ou inicie um simulado geral.";
+  $("#curProjDesc").textContent = (projObj && projObj.desc) ? projObj.desc : "Escolha um caderno temático para estudar.";
 
   const nbs = notebooksForProject(curProj);
   const projQs = S.questions.filter(q => !curProj || norm(projOf(q))===norm(curProj));
   const totalQ = projQs.length;
   const totalDue = projQs.filter(isDue).length;
-  $("#btnProjSimulado").disabled = totalQ === 0;
 
   const query = norm($("#nbSearch") ? $("#nbSearch").value : "");
   const filteredNbs = nbs.filter(n => !query || norm(n.name).includes(query));
@@ -2819,8 +2805,6 @@ function renderHome(){
   $("#ctErradas").textContent = err;
   $("#ctTodas").textContent = total;
   if($("#ctProblematicas")) $("#ctProblematicas").textContent = prob;
-  $("#ctSim").textContent = S.settings.simSize ? Math.min(S.settings.simSize,total) : total;
-  $("#simSubLabel").textContent = S.settings.simExam ? "Modo prova: gabarito e tempo ao final" : "Seleção aleatória com cronômetro";
   $("#homeLead").textContent = total
     ? "Escolha uma modalidade para treinar as questões deste caderno."
     : "Este caderno ainda não tem questões. Use os botões ao lado para criar ou importar CSV.";
@@ -2869,7 +2853,6 @@ function buildQueue(mode){
   if(mode==="revisao") list = base.filter(isDue).sort((a,b)=>a.due-b.due);
   else if(mode==="erradas") list = base.filter(q=>q.ultima===false);
   else if(mode==="problematicas") list = base.filter(isProblematic);
-  else if(mode==="simulado"){ const n=S.settings.simSize; list = shuffle(base); if(n) list=list.slice(0,n); }
   else list = base.slice();
   if(mode!=="revisao" && S.settings.shuffleQ) list = shuffle(list);
   return list;
@@ -2897,9 +2880,8 @@ function requestExitQuiz(){
 function startSession(mode, customQueue){
   const q = customQueue || buildQueue(mode);
   if(!q.length){ toast("Nada para estudar neste modo."); return; }
-  const isExam = mode==="simulado" && S.settings.simExam;
   sess = {
-    mode, isExam, queue:q, i:0, right:0, wrong:[], answers:[],
+    mode, queue:q, i:0, right:0, wrong:[], answers:[],
     answered:false, picked:null, eliminated:new Set(), startTs:now()
   };
   show("quiz");
@@ -3021,7 +3003,6 @@ function renderQ(){
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
   if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
-  if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
 
   const spec = tp === "lacuna" ? parseLacunaSpec(q.correta) : null;
@@ -3031,7 +3012,7 @@ function renderQ(){
   $("#overrideOkBtn").style.display = "none";
   if($("#editAfterAnsBtn")) $("#editAfterAnsBtn").style.display = "none";
 
-  const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
+  const lbl = "Confirmar";
 
   if(tp === "lacuna"){
     if(nBlanks > 0){
@@ -3137,7 +3118,7 @@ function toggleEliminate(k){
     if(sess.picked === k){
       opt.classList.remove("sel");
       sess.picked = null;
-      const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
+      const lbl = "Confirmar";
       setDock(lbl, true);
     }
   }
@@ -3149,7 +3130,7 @@ function pick(el){
   if(sess.eliminated.has(k)) toggleEliminate(k);
   $$("#opts .opt").forEach(o=>o.classList.remove("sel"));
   el.classList.add("sel"); sess.picked = k;
-  const lbl = sess.isExam ? (sess.i+1<sess.queue.length ? "Confirmar e próxima" : "Finalizar simulado") : "Confirmar";
+  const lbl = "Confirmar";
   setDock(lbl, false);
 }
 
@@ -3172,14 +3153,6 @@ function confirmAnswer(){
     erros: q.erros || 0,
     ultima: q.ultima
   };
-
-  if(sess.isExam){
-    sess.answers.push({ q, picked: recordedPick, ok });
-    if(ok) sess.right++; else sess.wrong.push(q);
-    gradeQuestion(q, ok);
-    next();
-    return;
-  }
 
   sess.answered=true;
   sess.answers.push({ q, picked: recordedPick, ok });
@@ -3699,7 +3672,6 @@ function refreshActiveQuizAfterEdit(q){
   if(q.dificuldade) meta.push(`<span class="tag ${difClass(q.dificuldade)}">${esc(q.dificuldade)}</span>`);
   meta.push(`<span class="tag box">caixa ${q.box}/5</span>`);
   if(isProblematic(q)) meta.push(`<span class="tag dif-hard">⚠ problemática</span>`);
-  if(sess.isExam) meta.push(`<span class="tag">modo prova</span>`);
   $("#qmeta").innerHTML = meta.join("");
   $("#exp").textContent = q.explicacao || "";
 
@@ -3791,8 +3763,6 @@ function saveQuestionModal(){
 function renderSettings(){
   $("#optShuffle").checked = S.settings.shuffleOpts;
   $("#optShuffleQ").checked = S.settings.shuffleQ;
-  $("#optSimExam").checked = !!S.settings.simExam;
-  $$("#simSize button").forEach(b=>b.classList.toggle("on", Number(b.dataset.n)===S.settings.simSize));
   $$("#themeSeg button").forEach(b=>b.classList.toggle("on", b.dataset.theme===(S.settings.theme||"auto")));
   $$("#intervals input").forEach(inp=>{ inp.value = ivDays(Number(inp.dataset.box)); });
   $("#syncKeyInput").value = getSyncKey();
@@ -3947,14 +3917,6 @@ $("#nbModalSave").addEventListener("click", saveNbModal);
 $("#nbModal").addEventListener("click", e=>{ if(e.target===$("#nbModal")) closeNbModal(); });
 $("#nbSearch").addEventListener("input", renderNotebooks);
 
-$("#btnProjSimulado").addEventListener("click", ()=>{
-  S.settings.tema = "";
-  S.settings.dificuldade = "";
-  S.settings.tipo = "";
-  save();
-  startSession("simulado");
-});
-
 $("#navProjects").addEventListener("click", goProjects);
 $("#mNavProjects").addEventListener("click", goProjects);
 $("#backToProjects").addEventListener("click", goProjects);
@@ -4021,8 +3983,6 @@ $("#dlSample").addEventListener("click", e=>{ e.preventDefault(); downloadSample
 
 $("#optShuffle").addEventListener("change", e=>{ S.settings.shuffleOpts=e.target.checked; save(); });
 $("#optShuffleQ").addEventListener("change", e=>{ S.settings.shuffleQ=e.target.checked; save(); });
-$("#optSimExam").addEventListener("change", e=>{ S.settings.simExam=e.target.checked; save(); renderHome(); });
-$$("#simSize button").forEach(b=> b.addEventListener("click", ()=>{ S.settings.simSize=Number(b.dataset.n); save(); renderSettings(); renderHome(); }));
 $$("#themeSeg button").forEach(b=> b.addEventListener("click", ()=>{ S.settings.theme=b.dataset.theme; save(); applyTheme(); renderSettings(); }));
 $$("#intervals input").forEach(inp=> inp.addEventListener("change", ()=>{
   const b=Number(inp.dataset.box); let v=parseInt(inp.value,10);

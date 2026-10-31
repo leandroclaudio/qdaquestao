@@ -1,7 +1,7 @@
 {
   "name": "Q de Questão — Banco de Questões",
   "short_name": "Q de Questão",
-  "description": "Estudo inteligente por questões com repetição espaçada (Sistema Leitner), simulados e estatísticas.",
+  "description": "Estudo inteligente por questões com repetição espaçada (Sistema Leitner) e estatísticas.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
