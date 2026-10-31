@@ -276,6 +276,17 @@
     font:600 11px/1 var(--mono);padding:6px 9px;border-radius:8px;font-variant-numeric:tabular-nums;
     background:var(--surface-2);border:1px solid var(--line);color:var(--ink-soft);
   }
+  .more-wrap{position:relative;display:flex}
+  .more-wrap > .btn{flex:1}
+  .more-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;display:none;flex-direction:column;min-width:230px;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px}
+  .more-menu.open{display:flex}
+  .more-menu button{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 12px;border-radius:10px;font:600 14px/1.3 var(--sans);color:var(--ink)}
+  .more-menu button:hover,.more-menu button:focus-visible{background:var(--surface-2)}
+  #nbFilters{display:none}
+  #nbFilters.open{display:block}
+  button.nb-badge{cursor:pointer;font:700 11px/1 var(--mono);transition:background .15s,color .15s}
+  button.nb-badge.due:hover{background:var(--accent);color:#fff}
   .nb-badge.due{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
   .nb-prog{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:2px}
   .nb-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--ok));border-radius:99px;transition:width .35s ease}
@@ -717,9 +728,8 @@
         <p class="lead" style="margin-bottom:0">Crie projetos para cada objetivo (ex.: Concurso ABDI, Certificação, Pós) e organize seus cadernos lá dentro.</p>
       </div>
       <div class="hero-actions">
+        <button class="btn auto" id="btnReviewAll">🎯 Revisar hoje</button>
         <button class="btn auto ghost" id="btnNewProject">＋ Novo Projeto</button>
-        <button class="btn auto ghost" id="btnQuickNewQ">✍️ Nova Questão</button>
-        <button class="btn auto" id="btnImportTop">📄 Importar CSV</button>
       </div>
     </div>
 
@@ -728,6 +738,7 @@
       <p>Organize seus estudos em <strong>Projetos → Cadernos Temáticos → Questões</strong> (Múltipla Escolha, Certo/Errado e Preencher Lacuna). Tudo fica salvo automaticamente na memória do seu navegador. Quer ver funcionando agora?</p>
       <div class="row" style="max-width:560px">
         <button class="btn" id="loadSampleBtn">✨ Carregar Projeto "Concurso ABDI" (Exemplo)</button>
+        <button class="btn ghost" id="btnImportTop">📄 Importar meu CSV</button>
         <button class="btn ghost" id="welcomeWikiBtn">📖 Ler como o App funciona</button>
       </div>
     </div>
@@ -754,14 +765,13 @@
         <p class="lead" id="curProjDesc" style="margin-bottom:0">Escolha um caderno temático para estudar.</p>
       </div>
       <div class="hero-actions">
+        <button class="btn auto" id="btnReviewProj">🎯 Revisar projeto</button>
         <button class="btn auto ghost" id="btnNewNotebook">＋ Novo Caderno</button>
-        <button class="btn auto ghost" id="btnImportProj">📄 Importar CSV</button>
       </div>
     </div>
 
     <div class="nb-toolbar" id="nbToolbar">
       <input type="text" id="nbSearch" placeholder="🔍 Filtrar caderno por nome...">
-      <button class="btn sm ghost" id="btnNewQFromNb">＋ Nova questão neste projeto</button>
     </div>
 
     <div class="nb-grid" id="nbGrid"></div>
@@ -781,14 +791,22 @@
         <p class="lead" id="homeLead" style="margin-bottom:6px">Escolha um modo de estudo abaixo.</p>
       </div>
       <div class="hero-actions">
-        <button class="btn sm ghost" id="nbAddQuestionBtn">＋ Nova questão aqui</button>
-        <button class="btn sm ghost" id="nbImportHereBtn">📄 Importar CSV aqui</button>
-        <button class="btn sm ghost" id="goManageHome">🗂️ Ver questões (<span id="manageCount">0</span>)</button>
+        <button class="btn sm ghost" id="btnToggleFilters" aria-expanded="false">⚙️ Filtros</button>
+        <div class="more-wrap">
+          <button class="btn sm ghost" id="btnNbMore" aria-haspopup="true" aria-expanded="false">⋯ Mais</button>
+          <div class="more-menu" id="nbMoreMenu" role="menu">
+            <button role="menuitem" id="goManageHome">🗂️ Ver questões (<span id="manageCount">0</span>)</button>
+            <button role="menuitem" id="nbAddQuestionBtn">＋ Nova questão aqui</button>
+            <button role="menuitem" id="nbImportHereBtn">📄 Importar CSV aqui</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="temas" id="tiposFilter" style="display:none"></div>
-    <div class="temas" id="difs" style="display:none"></div>
+    <div id="nbFilters">
+      <div class="temas" id="tiposFilter" style="display:none"></div>
+      <div class="temas" id="difs" style="display:none"></div>
+    </div>
 
     <div class="nb-layout">
       <div>
@@ -2579,6 +2597,10 @@ function renderProjects(){
 
   $("#prCount").textContent = projs.length;
   $("#prDue").textContent = totalDue;
+  const rvAll = $("#btnReviewAll");
+  rvAll.textContent = totalDue ? `🎯 Revisar hoje (${totalDue})` : "✓ Nada para revisar hoje";
+  rvAll.disabled = totalDue === 0;
+  rvAll.style.display = empty ? "none" : "";
   $("#prTotalQ").textContent = totalQ;
   $("#prStreak").innerHTML = `${calcStreak()}d 🔥`;
   $("#prAcc").textContent = `• ${globalAcc}`;
@@ -2611,7 +2633,9 @@ function renderProjects(){
         </div>
         <div class="nb-prog" title="${prog}% consolidadas"><i style="width:${prog}%"></i></div>
         <div class="nb-badges">
-          <span class="nb-badge ${dueCount ? "due" : ""}">${dueCount} para hoje</span>
+          ${dueCount
+            ? `<button class="nb-badge due" data-review-proj="${esc(p.name)}" title="Revisar agora o que vence hoje neste projeto">🎯 Revisar ${dueCount}</button>`
+            : `<span class="nb-badge">0 para hoje</span>`}
           <span class="nb-badge">${nbs.length} caderno(s)</span>
           <span class="nb-badge">${qCount} q</span>
           <span class="nb-badge">Acerto: ${acc}</span>
@@ -2629,8 +2653,15 @@ function renderProjects(){
 
   $$("#prGrid [data-open-proj]").forEach(card => {
     card.addEventListener("click", e => {
-      if(e.target.closest("[data-edit-proj],[data-del-proj]")) return;
+      if(e.target.closest("[data-edit-proj],[data-del-proj],[data-review-proj]")) return;
       openProject(card.dataset.openProj);
+    });
+  });
+
+  $$("#prGrid [data-review-proj]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      startDueReview(btn.dataset.reviewProj, "projects");
     });
   });
 
@@ -2714,6 +2745,9 @@ function renderNotebooks(){
   const projQs = S.questions.filter(q => !curProj || norm(projOf(q))===norm(curProj));
   const totalQ = projQs.length;
   const totalDue = projQs.filter(isDue).length;
+  const rvProj = $("#btnReviewProj");
+  rvProj.textContent = totalDue ? `🎯 Revisar projeto (${totalDue})` : "✓ Projeto em dia";
+  rvProj.disabled = totalDue === 0;
 
   const query = norm($("#nbSearch") ? $("#nbSearch").value : "");
   const filteredNbs = nbs.filter(n => !query || norm(n.name).includes(query));
@@ -2905,8 +2939,20 @@ function renderFilters(){
   }
 }
 
+let nbFiltersOpen = false;
+function syncFiltersUI(){
+  const hasOptions = $("#tiposFilter").style.display !== "none" || $("#difs").style.display !== "none";
+  const active = (S.settings.tipo ? 1 : 0) + (S.settings.dificuldade ? 1 : 0);
+  if(active) nbFiltersOpen = true;
+  const btn = $("#btnToggleFilters");
+  btn.style.display = hasOptions ? "" : "none";
+  btn.textContent = active ? `⚙️ Filtros (${active})` : "⚙️ Filtros";
+  btn.setAttribute("aria-expanded", String(nbFiltersOpen && hasOptions));
+  $("#nbFilters").classList.toggle("open", nbFiltersOpen && hasOptions);
+}
 function renderHome(){
   renderFilters();
+  syncFiltersUI();
   const projName = S.settings.projeto;
   const nbName = S.settings.tema;
   $("#backToNotebooks").textContent = projName ? `📂 ${projName}` : "📂 Cadernos";
@@ -2935,7 +2981,7 @@ function renderHome(){
   if($("#ctProblematicas")) $("#ctProblematicas").textContent = prob;
   $("#homeLead").textContent = total
     ? "Escolha uma modalidade para treinar as questões deste caderno."
-    : "Este caderno ainda não tem questões. Use os botões ao lado para criar ou importar CSV.";
+    : "Este caderno ainda não tem questões. Use o menu ⋯ Mais para criar ou importar.";
   $$("#modes .mode").forEach(b=>{
     const m=b.dataset.mode;
     const n = m==="revisao"?due : m==="erradas"?err : m==="problematicas"?prob : total;
@@ -2986,10 +3032,26 @@ function buildQueue(mode){
   return list;
 }
 
+function goToSessionOrigin(){
+  const origin = sess && sess.origin;
+  if(origin === "projects"){ goProjects(); return; }
+  if(origin === "notebooks"){ renderNotebooks(); show("notebooks"); return; }
+  renderHome();
+  show("home");
+}
+
+// Revisão de tudo que venceu: de todos os projetos (projName vazio) ou de um projeto.
+function startDueReview(projName, origin){
+  const list = S.questions
+    .filter(q => isDue(q) && (!projName || norm(projOf(q)) === norm(projName)))
+    .sort((a, b) => a.due - b.due);
+  if(projName){ S.settings.projeto = projName; save(); }
+  startSession("revisao", list, origin);
+}
+
 function requestExitQuiz(){
   if(!$("#quiz").classList.contains("active") || !sess){
-    renderHome();
-    show("home");
+    goToSessionOrigin();
     return;
   }
   const answeredCount = sess.answers ? sess.answers.length : 0;
@@ -2997,19 +3059,18 @@ function requestExitQuiz(){
     showConfirm(
       `Você já respondeu ${answeredCount} questão(ões) nesta sessão. Deseja sair agora? As respostas dadas continuam registradas.`,
       "Sair",
-      () => { renderHome(); show("home"); }
+      () => goToSessionOrigin()
     );
   } else {
-    renderHome();
-    show("home");
+    goToSessionOrigin();
   }
 }
 
-function startSession(mode, customQueue){
+function startSession(mode, customQueue, origin){
   const q = customQueue || buildQueue(mode);
   if(!q.length){ toast("Nada para estudar neste modo."); return; }
   sess = {
-    mode, queue:q, i:0, right:0, wrong:[], answers:[],
+    mode, origin: origin || "home", queue:q, i:0, right:0, wrong:[], answers:[],
     answered:false, picked:null, eliminated:new Set(), startTs:now()
   };
   show("quiz");
@@ -3415,6 +3476,9 @@ function finish(){
     wc.style.display="none";
     retryBtn.style.display="none";
   }
+  const backBtn = $("#resBackNotebook");
+  backBtn.style.display = sess.origin === "projects" ? "none" : "";
+  backBtn.textContent = sess.origin === "notebooks" ? "📂 Voltar ao projeto" : "📂 Voltar ao caderno";
   show("result");
 }
 
@@ -4022,7 +4086,6 @@ function readCSVFile(file){
 }
 
 $("#btnImportTop").addEventListener("click", ()=>openImportView("", ""));
-$("#btnImportProj").addEventListener("click", ()=>openImportView(S.settings.projeto || "", ""));
 $("#nbImportHereBtn").addEventListener("click", ()=>openImportView(S.settings.projeto || "", S.settings.tema || ""));
 $("#manImportBtn").addEventListener("click", ()=>openImportView($("#qFilterProj").value || "", $("#qFilterTema").value || ""));
 
@@ -4075,10 +4138,10 @@ $("#copyPromptBtn").addEventListener("click", ()=>{
 $("#quizBack").addEventListener("click", requestExitQuiz);
 $("#manExportBtn").addEventListener("click", exportFilteredCSV);
 $("#dockBtn").addEventListener("click", confirmAnswer);
-$("#resBackNotebook").addEventListener("click", ()=>{ renderHome(); show("home"); });
+$("#resBackNotebook").addEventListener("click", goToSessionOrigin);
 $("#resHome").addEventListener("click", goProjects);
 $("#resRetryWrong").addEventListener("click", ()=>{
-  if(sess && sess.wrong && sess.wrong.length){ startSession("erradas", sess.wrong.slice()); }
+  if(sess && sess.wrong && sess.wrong.length){ startSession("erradas", sess.wrong.slice(), sess.origin); }
 });
 $("#stBack").addEventListener("click", goProjects);
 $("#wikiBack").addEventListener("click", goProjects);
@@ -4091,9 +4154,20 @@ $("#qFilterProj").addEventListener("change", ()=>renderManage($("#qFilterProj").
 $("#qFilterTema").addEventListener("change", ()=>renderManage());
 $("#qFilterTipo").addEventListener("change", ()=>renderManage());
 
-$("#btnQuickNewQ").addEventListener("click", ()=>openEditModal(null, "", ""));
 $("#btnNewQ").addEventListener("click", ()=>openEditModal(null, $("#qFilterProj").value || "", $("#qFilterTema").value || ""));
-$("#btnNewQFromNb").addEventListener("click", ()=>openEditModal(null, S.settings.projeto || "", ""));
+$("#btnReviewAll").addEventListener("click", ()=>startDueReview("", "projects"));
+$("#btnReviewProj").addEventListener("click", ()=>startDueReview(S.settings.projeto || "", "notebooks"));
+$("#btnToggleFilters").addEventListener("click", ()=>{ nbFiltersOpen = !nbFiltersOpen; syncFiltersUI(); });
+function closeNbMore(){ $("#nbMoreMenu").classList.remove("open"); $("#btnNbMore").setAttribute("aria-expanded","false"); }
+$("#btnNbMore").addEventListener("click", e=>{
+  e.stopPropagation();
+  const open = !$("#nbMoreMenu").classList.contains("open");
+  $("#nbMoreMenu").classList.toggle("open", open);
+  $("#btnNbMore").setAttribute("aria-expanded", String(open));
+});
+$("#nbMoreMenu").addEventListener("click", closeNbMore);
+document.addEventListener("click", e=>{ if(!e.target.closest(".more-wrap")) closeNbMore(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeNbMore(); });
 $("#nbAddQuestionBtn").addEventListener("click", ()=>openEditModal(null, S.settings.projeto || "", S.settings.tema || ""));
 $("#eqCancel").addEventListener("click", closeEditModal);
 $("#eqSave").addEventListener("click", saveQuestionModal);
