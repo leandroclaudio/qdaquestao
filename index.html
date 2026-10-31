@@ -1448,12 +1448,14 @@ const ICON_PALETTE = [
 const SYNC_KEY_STORAGE = "bq_sync_key_v1";
 const SYNC_ENDPOINT = "/.netlify/functions/sync";
 let syncInFlight = false;
+let syncQueued = null;
+let syncSnap = null;
 let syncPushTimer = null;
 let lastSyncTime = 0;
 let lastSyncError = "";
 
 const defaultState = () => ({
-  v:3, updatedAt:0, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
+  v:3, updatedAt:0, settingsAt:0, wipedAt:0, deleted:{}, questions:[], history:[], historyDaily:{}, projects:[], notebooks:[],
   settings:{
     shuffleOpts:true, shuffleQ:true,
     projeto:"", tema:"", dificuldade:"", tipo:"", theme:"auto", intervals:DEFAULT_INTERVALS.slice()
@@ -1517,6 +1519,9 @@ let S = load();
 function normalizeLoadedState(s){
   const def = defaultState();
   s.updatedAt = typeof s.updatedAt === "number" ? s.updatedAt : 0;
+  s.settingsAt = typeof s.settingsAt === "number" ? s.settingsAt : 0;
+  s.wipedAt = typeof s.wipedAt === "number" ? s.wipedAt : 0;
+  s.deleted = (s.deleted && typeof s.deleted === "object" && !Array.isArray(s.deleted)) ? s.deleted : {};
   s.settings = Object.assign(def.settings, s.settings||{});
   delete s.settings.simSize; delete s.settings.simExam;
   s.questions = Array.isArray(s.questions) ? s.questions : [];
@@ -1550,7 +1555,7 @@ function normalizeLoadedState(s){
 
 function compactOldHistory(stateObj){
   if(!stateObj || !Array.isArray(stateObj.history) || !stateObj.history.length) return;
-  const cutoff = now() - 90 * 86400000;
+  const cutoff = historyCutoff();
   if(!stateObj.history.some(h => h && typeof h.t === "number" && h.t < cutoff)) return;
   stateObj.historyDaily = (stateObj.historyDaily && typeof stateObj.historyDaily === "object" && !Array.isArray(stateObj.historyDaily))
     ? stateObj.historyDaily
@@ -1666,8 +1671,10 @@ function updateSyncUI(){
 function save(opts){
   if(!opts || !opts.fromCloud){
     S.updatedAt = now();
+    stampChanges(S);
   }
   compactOldHistory(S);
+  syncSnap = buildSyncSnap(S);
   Store.set(KEY, JSON.stringify(S));
   updateSavePill();
   if(!opts || !opts.fromCloud){
@@ -1684,42 +1691,218 @@ function scheduleCloudPush(){
   }, 700);
 }
 
+/* ---------- sincronização: mescla item a item ----------
+   Cada questão, projeto e caderno carrega "mt" (última modificação).
+   Exclusões viram marcas em S.deleted. Na sincronização, os dois lados
+   são mesclados (vence a versão mais recente de cada item) e o
+   histórico de respostas é unido, então nenhum aparelho apaga o
+   trabalho do outro. */
+const NAV_SETTINGS = ["projeto","tema","dificuldade","tipo"];
+const TOMBSTONE_TTL = 365 * 86400000;
+
+function historyCutoff(){ return startOfLocalToday(now() - 90 * 86400000); }
+const qKey = q => "q:" + q.id;
+const pKey = p => "p:" + norm(p.name);
+const nKey = n => "n:" + norm(n.project) + "::" + norm(n.name);
+function itemSig(o){ const { mt, ...rest } = o || {}; return JSON.stringify(rest); }
+function syncableSettings(st){
+  const o = Object.assign({}, st || {});
+  for(const k of NAV_SETTINGS) delete o[k];
+  return o;
+}
+function historyCount(st){
+  return (st.history ? st.history.length : 0) + Object.keys(st.historyDaily || {}).length;
+}
+
+function buildSyncSnap(st){
+  const snap = { items: new Map(), settings: JSON.stringify(syncableSettings(st.settings)), hist: historyCount(st) };
+  for(const q of st.questions) snap.items.set(qKey(q), itemSig(q));
+  for(const p of st.projects) snap.items.set(pKey(p), itemSig(p));
+  for(const n of st.notebooks) snap.items.set(nKey(n), itemSig(n));
+  return snap;
+}
+
+// Compara com o último estado salvo e carimba o que mudou ou foi excluído.
+function stampChanges(st){
+  if(!syncSnap) return;
+  const t = now();
+  const alive = new Set();
+  const visit = (key, o) => {
+    alive.add(key);
+    if(syncSnap.items.get(key) !== itemSig(o)) o.mt = t;
+  };
+  for(const q of st.questions) visit(qKey(q), q);
+  for(const p of st.projects) visit(pKey(p), p);
+  for(const n of st.notebooks) visit(nKey(n), n);
+  for(const key of syncSnap.items.keys()){
+    if(!alive.has(key)) st.deleted[key] = t;
+  }
+  for(const key of alive) delete st.deleted[key];
+  if(JSON.stringify(syncableSettings(st.settings)) !== syncSnap.settings) st.settingsAt = t;
+  if(syncSnap.hist > 0 && historyCount(st) === 0) st.wipedAt = t;
+}
+
+function mergeStates(L, R){
+  const deleted = {};
+  const cutTomb = now() - TOMBSTONE_TTL;
+  for(const src of [R.deleted || {}, L.deleted || {}]){
+    for(const [k, v] of Object.entries(src)){
+      if(v > cutTomb) deleted[k] = Math.max(deleted[k] || 0, v);
+    }
+  }
+  const wipedAt = Math.max(L.wipedAt || 0, R.wipedAt || 0);
+
+  // Reaproveita os objetos locais, para não quebrar referências de uma sessão aberta.
+  const mergeList = (lList, rList, keyFn, progress) => {
+    const rMap = new Map(rList.map(o => [keyFn(o), o]));
+    const out = [], seen = new Set();
+    const choose = (l, r) => {
+      if(!r) return l;
+      if(!l) return r;
+      const lm = l.mt || 0, rm = r.mt || 0;
+      const remoteWins = rm > lm || (rm === lm && progress && progress(r) > progress(l));
+      if(remoteWins){
+        for(const k of Object.keys(l)) if(!(k in r)) delete l[k];
+        Object.assign(l, r);
+      }
+      return l;
+    };
+    const keep = (key, o) => !(deleted[key] && deleted[key] >= (o.mt || 0));
+    for(const l of lList){
+      const key = keyFn(l);
+      if(seen.has(key)) continue;
+      seen.add(key);
+      const o = choose(l, rMap.get(key));
+      if(keep(key, o)) out.push(o);
+    }
+    for(const r of rList){
+      const key = keyFn(r);
+      if(seen.has(key)) continue;
+      seen.add(key);
+      if(keep(key, r)) out.push(r);
+    }
+    return out;
+  };
+
+  // Histórico diário (compactado): por dia, fica o maior registro.
+  const wipeDay = wipedAt ? localDayKey(wipedAt) : "";
+  const historyDaily = {};
+  for(const side of [L, R]){
+    for(const [day, v] of Object.entries(side.historyDaily || {})){
+      if(!v || typeof v !== "object") continue;
+      if((side.wipedAt || 0) < wipedAt && day <= wipeDay) continue;
+      const cur = historyDaily[day];
+      if(!cur || (v.total || 0) > (cur.total || 0)) historyDaily[day] = { total: v.total || 0, acertos: v.acertos || 0 };
+    }
+  }
+
+  // Histórico recente: união sem duplicatas.
+  const hMap = new Map();
+  for(const h of [...(L.history || []), ...(R.history || [])]){
+    if(!h || typeof h.t !== "number" || h.t <= wipedAt) continue;
+    if(h.t < historyCutoff() && historyDaily[localDayKey(h.t)]) continue;
+    const k = h.qid + "|" + h.t;
+    const prev = hMap.get(k);
+    if(prev){ if(h.ok) prev.ok = true; }
+    else hMap.set(k, Object.assign({}, h));
+  }
+  const history = Array.from(hMap.values()).sort((a, b) => a.t - b.t);
+
+  const remoteSettings = (R.settingsAt || 0) > (L.settingsAt || 0);
+  const settings = Object.assign({}, remoteSettings ? R.settings : L.settings);
+  for(const k of NAV_SETTINGS) settings[k] = L.settings[k];
+
+  return {
+    v: 3,
+    updatedAt: Math.max(L.updatedAt || 0, R.updatedAt || 0),
+    settingsAt: Math.max(L.settingsAt || 0, R.settingsAt || 0),
+    wipedAt, deleted,
+    questions: mergeList(L.questions, R.questions, qKey, q => q.vistas || 0),
+    history, historyDaily,
+    projects: mergeList(L.projects, R.projects, pKey),
+    notebooks: mergeList(L.notebooks, R.notebooks, nKey),
+    settings
+  };
+}
+
+// Assinatura do conteúdo, ignorando navegação e carimbo global.
+function contentSig(st){
+  return JSON.stringify(Object.assign({}, st, { updatedAt: 0, settings: syncableSettings(st.settings) }));
+}
+
 async function pushToCloud(opts){
+  return syncWithCloud(opts);
+}
+
+async function syncWithCloud(opts){
+  opts = opts || {};
   const sk = getSyncKey();
   if(!sk) return false;
   clearTimeout(syncPushTimer);
   syncPushTimer = null;
-  if(!S.updatedAt) S.updatedAt = now();
+  if(syncInFlight){
+    syncQueued = Object.assign(syncQueued || {}, opts);
+    return false;
+  }
+  const loud = Boolean(opts.manual || opts.onConnect);
   syncInFlight = true;
   updateSavePill();
   updateSyncUI();
+  let ok = false;
   try{
-    const bodyStr = JSON.stringify(S);
     const res = await fetch(SYNC_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-sync-key": sk },
-      body: bodyStr,
-      keepalive: Boolean(opts && opts.keepalive && bodyStr.length < 60000)
+      method: "GET",
+      headers: { "x-sync-key": sk },
+      cache: "no-store"
     });
     const data = await res.json().catch(() => ({}));
-    if(!res.ok || !data.ok){
-      throw new Error(data.error || `Erro HTTP ${res.status}`);
+    if(!res.ok || !data.ok) throw new Error(data.error || `Erro HTTP ${res.status}`);
+
+    const cloud = (data.empty || !data.state) ? null : normalizeLoadedState(data.state);
+    const before = contentSig(S);
+    const beforeCount = S.questions.length;
+    const merged = cloud ? mergeStates(S, cloud) : S;
+    const localChanged = contentSig(merged) !== before;
+    const cloudChanged = !cloud || contentSig(merged) !== contentSig(cloud);
+
+    if(localChanged){
+      S = merged;
+      save({ fromCloud: true });
+      refreshAllViews();
+    }
+    if(cloudChanged){
+      const bodyStr = JSON.stringify(S);
+      const pr = await fetch(SYNC_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-sync-key": sk },
+        body: bodyStr,
+        keepalive: Boolean(opts.keepalive && bodyStr.length < 60000)
+      });
+      const pd = await pr.json().catch(() => ({}));
+      if(!pr.ok || !pd.ok) throw new Error(pd.error || `Erro HTTP ${pr.status}`);
     }
     lastSyncTime = now();
     lastSyncError = "";
-    syncInFlight = false;
-    updateSavePill();
-    updateSyncUI();
-    if(opts && opts.manual) toast("Dados sincronizados na nuvem!");
-    return true;
+    ok = true;
+    if(loud){
+      const diff = S.questions.length - beforeCount;
+      if(localChanged && diff > 0) toast(`Sincronizado! ${diff} questão(ões) nova(s) vieram da nuvem.`);
+      else if(localChanged || cloudChanged) toast("Sincronizado! Os dados deste aparelho e da nuvem foram combinados.");
+      else toast("Tudo atualizado entre este aparelho e a nuvem!");
+    }
   }catch(err){
     lastSyncError = err && err.message ? err.message : "Falha de rede";
+    if(loud) toast(`Erro ao sincronizar: ${lastSyncError}`);
+  }finally{
     syncInFlight = false;
     updateSavePill();
     updateSyncUI();
-    if(opts && opts.manual) toast(`Não foi possível sincronizar: ${lastSyncError}`);
-    return false;
   }
+  if(syncQueued){
+    const q = syncQueued; syncQueued = null;
+    syncWithCloud(q);
+  }
+  return ok;
 }
 
 function refreshAllViews(){
@@ -1740,97 +1923,7 @@ function refreshAllViews(){
   if(elSet && elSet.classList.contains("active")) renderSettings();
 }
 
-async function syncWithCloud(opts){
-  const sk = getSyncKey();
-  if(!sk) return;
-  if(syncPushTimer && !(opts && opts.onConnect)){
-    await pushToCloud({ silent: true });
-    return;
-  }
-  syncInFlight = true;
-  updateSavePill();
-  updateSyncUI();
-  try{
-    const res = await fetch(SYNC_ENDPOINT, {
-      method: "GET",
-      headers: { "x-sync-key": sk },
-      cache: "no-store"
-    });
-    const data = await res.json().catch(() => ({}));
-    if(!res.ok || !data.ok){
-      throw new Error(data.error || `Erro HTTP ${res.status}`);
-    }
-    const localHasData = S.questions.length > 0 || S.projects.length > 0 || S.notebooks.length > 0;
-    if(data.empty || !data.state){
-      syncInFlight = false;
-      if(localHasData){
-        await pushToCloud({ manual: Boolean(opts && (opts.manual || opts.onConnect)) });
-      } else {
-        lastSyncTime = now();
-        lastSyncError = "";
-        updateSavePill();
-        updateSyncUI();
-        if(opts && (opts.manual || opts.onConnect)) toast("Chave conectada! Seus próximos cadernos e questões serão sincronizados.");
-      }
-      return;
-    }
-
-    const cloudState = normalizeLoadedState(data.state);
-    const cloudUpdated = cloudState.updatedAt || 0;
-    const localUpdated = S.updatedAt || 0;
-    const cloudHasData = cloudState.questions.length > 0 || cloudState.projects.length > 0 || cloudState.notebooks.length > 0;
-
-    if(!localHasData || cloudUpdated > localUpdated || (opts && opts.onConnect && cloudHasData && localUpdated === 0)){
-      S = cloudState;
-      if(!S.updatedAt) S.updatedAt = cloudUpdated || now();
-      save({ fromCloud: true });
-      lastSyncTime = now();
-      lastSyncError = "";
-      syncInFlight = false;
-      refreshAllViews();
-      if(opts && (opts.manual || opts.onConnect)){
-        toast(`Sincronizado! ${S.questions.length} questões carregadas da nuvem.`);
-      }
-    } else if(opts && opts.onConnect && cloudHasData && localHasData && localUpdated > cloudUpdated){
-      syncInFlight = false;
-      updateSavePill();
-      updateSyncUI();
-      showConfirm(
-        `Esta chave já possui ${cloudState.questions.length} questões salvas na nuvem, e este aparelho possui ${S.questions.length} questões locais. Deseja carregar os dados da nuvem neste aparelho?`,
-        "Carregar da nuvem",
-        () => {
-          S = cloudState;
-          if(!S.updatedAt) S.updatedAt = now();
-          save({ fromCloud: true });
-          lastSyncTime = now();
-          lastSyncError = "";
-          refreshAllViews();
-          toast(`Sincronizado! ${S.questions.length} questões carregadas da nuvem.`);
-        }
-      );
-    } else if(localUpdated > cloudUpdated){
-      syncInFlight = false;
-      await pushToCloud({ manual: Boolean(opts && (opts.manual || opts.onConnect)) });
-    } else {
-      lastSyncTime = now();
-      lastSyncError = "";
-      syncInFlight = false;
-      updateSavePill();
-      updateSyncUI();
-      if(opts && (opts.manual || opts.onConnect)){
-        toast("Tudo atualizado entre este aparelho e a nuvem!");
-      }
-    }
-  }catch(err){
-    lastSyncError = err && err.message ? err.message : "Falha de rede";
-    syncInFlight = false;
-    updateSavePill();
-    updateSyncUI();
-    if(opts && (opts.manual || opts.onConnect)){
-      toast(`Erro ao sincronizar: ${lastSyncError}`);
-    }
-  }
-}
+syncSnap = buildSyncSnap(S);
 
 Promise.all([
   Store.recoverFromIDB(KEY),
@@ -4029,7 +4122,7 @@ document.addEventListener("visibilitychange", () => {
   if(!getSyncKey()) return;
   if(document.visibilityState === "hidden"){
     if(syncPushTimer){
-      pushToCloud({ silent: true, keepalive: true });
+      syncWithCloud({ silent: true, keepalive: true });
     }
   } else if(document.visibilityState === "visible"){
     if(!sess){
