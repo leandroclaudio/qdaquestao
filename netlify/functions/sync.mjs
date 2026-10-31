@@ -6,65 +6,73 @@ const HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate"
 };
 
-function keyToBlobId(rawKey) {
-  const normalized = String(rawKey || "").trim();
-  if (!normalized || normalized.length < 3) return null;
+// Chaves novas precisam ter pelo menos 16 caracteres. Chaves curtas antigas
+// continuam funcionando só enquanto já tiverem dados salvos, para dar tempo
+// de migrar pelo app.
+const MIN_KEY_LENGTH = 16;
+const MAX_KEY_LENGTH = 200;
+const MAX_BODY_BYTES = 5 * 1024 * 1024;
+
+const reply = (status, obj) => new Response(JSON.stringify(obj), { status, headers: HEADERS });
+
+function keyToBlobId(normalized) {
   const hash = crypto.createHash("sha256").update(normalized).digest("hex");
   return `u_${hash}`;
 }
 
 export default async (req) => {
   try {
-    const url = new URL(req.url);
-    const headerKey = req.headers.get("x-sync-key") || url.searchParams.get("key") || "";
-    const blobId = keyToBlobId(headerKey);
-
-    if (!blobId) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "Informe uma chave de sincronização com pelo menos 3 caracteres." }),
-        { status: 400, headers: HEADERS }
-      );
+    // A chave vem só pelo cabeçalho, nunca pela URL (URLs acabam em logs).
+    const rawKey = String(req.headers.get("x-sync-key") || "").trim();
+    if (!rawKey || rawKey.length > MAX_KEY_LENGTH) {
+      return reply(400, { ok: false, error: "Chave de sincronização ausente ou inválida." });
     }
 
     const store = getStore("qdequestao_sync");
+    const blobId = keyToBlobId(rawKey);
+    const weak = rawKey.length < MIN_KEY_LENGTH;
+
+    if (weak) {
+      const existing = await store.getMetadata(blobId);
+      if (!existing) {
+        return reply(400, {
+          ok: false,
+          code: "weak_key",
+          error: `Chave curta demais ou desativada. Use uma chave com pelo menos ${MIN_KEY_LENGTH} caracteres (o botão 🎲 gera uma).`
+        });
+      }
+    }
 
     if (req.method === "GET") {
       const data = await store.get(blobId, { type: "json" });
-      if (!data) {
-        return new Response(
-          JSON.stringify({ ok: true, empty: true, state: null }),
-          { status: 200, headers: HEADERS }
-        );
-      }
-      return new Response(
-        JSON.stringify({ ok: true, empty: false, state: data }),
-        { status: 200, headers: HEADERS }
-      );
+      return reply(200, { ok: true, empty: !data, state: data || null, weakKey: weak });
     }
 
     if (req.method === "POST") {
-      const body = await req.json();
+      const declared = Number(req.headers.get("content-length") || 0);
+      if (declared > MAX_BODY_BYTES) {
+        return reply(413, { ok: false, error: "Dados grandes demais para sincronizar." });
+      }
+      const text = await req.text();
+      if (text.length > MAX_BODY_BYTES) {
+        return reply(413, { ok: false, error: "Dados grandes demais para sincronizar." });
+      }
+      let body;
+      try { body = JSON.parse(text); } catch { body = null; }
       if (!body || typeof body !== "object" || !Array.isArray(body.questions)) {
-        return new Response(
-          JSON.stringify({ ok: false, error: "Formato de estado inválido." }),
-          { status: 400, headers: HEADERS }
-        );
+        return reply(400, { ok: false, error: "Formato de estado inválido." });
       }
       await store.setJSON(blobId, body);
-      return new Response(
-        JSON.stringify({ ok: true, updatedAt: body.updatedAt || Date.now() }),
-        { status: 200, headers: HEADERS }
-      );
+      return reply(200, { ok: true, updatedAt: body.updatedAt || Date.now(), weakKey: weak });
     }
 
-    return new Response(
-      JSON.stringify({ ok: false, error: "Método não suportado." }),
-      { status: 405, headers: HEADERS }
-    );
+    if (req.method === "DELETE") {
+      await store.delete(blobId);
+      return reply(200, { ok: true, deleted: true });
+    }
+
+    return reply(405, { ok: false, error: "Método não suportado." });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }),
-      { status: 500, headers: HEADERS }
-    );
+    return reply(500, { ok: false, error: String(err && err.message ? err.message : err) });
   }
 };

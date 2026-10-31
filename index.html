@@ -629,7 +629,7 @@
     .modal-card{border-radius:22px;padding:24px;box-shadow:var(--shadow);max-height:90vh}
     .modal-card::before{display:none}
   }
-  .modal-msg{font-size:15.5px;font-weight:600;line-height:1.5;margin-bottom:18px}
+  .modal-msg{font-size:15.5px;font-weight:600;line-height:1.5;margin-bottom:18px;white-space:pre-line;overflow-wrap:anywhere}
   .modal-actions{display:flex;gap:10px;margin-top:18px}
   .modal-actions .btn{flex:1}
 
@@ -1162,14 +1162,17 @@ Regras:
 
         <div class="card">
           <h2>☁️ Sincronização Automática (PC e Celular)</h2>
-          <p class="lead" style="margin-bottom:12px">Crie uma <strong>chave secreta</strong> abaixo e digite a mesma chave no celular (só precisa fazer isso uma única vez em cada aparelho). Tudo será sincronizado automaticamente na nuvem.</p>
+          <p class="lead" style="margin-bottom:12px">Gere uma <strong>chave secreta</strong> no botão 🎲, conecte e digite a mesma chave no outro aparelho (só uma vez em cada um). A chave é a única proteção dos seus dados: guarde-a como uma senha.</p>
           <label class="field" style="margin-top:0">Sua chave de sincronização</label>
           <div class="sync-form-row">
-            <input type="text" id="syncKeyInput" placeholder="Ex.: leandro-abdi-2026" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <input type="text" id="syncKeyInput" placeholder="Mínimo de 16 caracteres (ou toque em 🎲)" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <button class="btn auto ghost" id="btnGenSyncKey" title="Gerar chave forte aleatória">🎲 Gerar</button>
             <button class="btn auto" id="btnSaveSyncKey">☁️ Conectar</button>
           </div>
           <div class="row" id="syncActionsRow" style="display:none;margin-bottom:10px">
             <button class="btn sm ghost" id="btnSyncNow">🔄 Sincronizar agora</button>
+            <button class="btn sm ghost" id="btnCopySyncKey">📋 Copiar chave</button>
+            <button class="btn sm" id="btnUpgradeSyncKey" style="display:none">🔐 Trocar por chave forte</button>
             <button class="btn sm ghost" id="btnDisconnectSync">Desconectar chave</button>
           </div>
           <div id="syncStatusBox" style="font:600 12px/1.45 var(--mono);padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-soft);overflow-wrap:anywhere">
@@ -1447,6 +1450,15 @@ const ICON_PALETTE = [
 
 const SYNC_KEY_STORAGE = "bq_sync_key_v1";
 const SYNC_ENDPOINT = "/.netlify/functions/sync";
+const MIN_SYNC_KEY = 16;
+function generateSyncKey(){
+  // 20 caracteres sem ambíguos (0/o, 1/l/i), em blocos de 5: cerca de 100 bits.
+  const abc = "abcdefghjkmnpqrstuvwxyz23456789";
+  const buf = new Uint32Array(20);
+  crypto.getRandomValues(buf);
+  const chars = Array.from(buf, n => abc[n % abc.length]).join("");
+  return chars.match(/.{5}/g).join("-");
+}
 let syncInFlight = false;
 let syncQueued = null;
 let syncSnap = null;
@@ -1646,6 +1658,13 @@ function updateSyncUI(){
   if(document.activeElement !== inp && sk && !inp.value){
     inp.value = sk;
   }
+  const upBtn = document.getElementById("btnUpgradeSyncKey");
+  if(upBtn){
+    const weak = sk && sk.length < MIN_SYNC_KEY;
+    upBtn.style.display = sk ? "" : "none";
+    upBtn.className = weak ? "btn sm" : "btn sm ghost";
+    upBtn.textContent = weak ? "🔐 Trocar por chave forte" : "🔐 Trocar chave";
+  }
   if(sk){
     if(row) row.style.display = "flex";
     if(btn) btn.textContent = "☁️ Salvar chave";
@@ -1659,6 +1678,10 @@ function updateSyncUI(){
       box.style.color = "var(--ok)";
       const timeStr = lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "agora";
       box.textContent = `🟢 Conectado na nuvem com a chave "${sk}" (${S.questions.length} questões sincronizadas às ${timeStr})`;
+      if(sk.length < MIN_SYNC_KEY){
+        box.style.color = "var(--warn)";
+        box.textContent += ` ⚠️ Esta chave é curta e fácil de adivinhar. Use "Trocar por chave forte".`;
+      }
     }
   } else {
     if(row) row.style.display = "none";
@@ -4090,8 +4113,8 @@ $("#clearAll").addEventListener("click", ()=> showConfirm("Apagar TODOS os proje
 
 function handleSaveSyncKey(){
   const raw = ($("#syncKeyInput").value || "").trim();
-  if(raw.length < 3){
-    toast("Digite uma chave com pelo menos 3 caracteres.");
+  if(raw.length < MIN_SYNC_KEY){
+    toast(`A chave precisa ter pelo menos ${MIN_SYNC_KEY} caracteres. Toque em 🎲 para gerar uma.`);
     $("#syncKeyInput").focus();
     return;
   }
@@ -4099,6 +4122,41 @@ function handleSaveSyncKey(){
   syncWithCloud({ onConnect: true, manual: true });
 }
 $("#btnSaveSyncKey").addEventListener("click", handleSaveSyncKey);
+$("#btnGenSyncKey").addEventListener("click", ()=>{
+  $("#syncKeyInput").value = generateSyncKey();
+  toast("Chave gerada. Anote ou copie antes de conectar.");
+});
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); toast("Chave copiada!"); }
+  catch(e){ toast("Não consegui copiar. Selecione a chave no campo acima."); }
+}
+$("#btnCopySyncKey").addEventListener("click", ()=>{ const k=getSyncKey(); if(k) copyText(k); });
+async function waitSyncIdle(){
+  while(syncInFlight || syncQueued){ await new Promise(r=>setTimeout(r,150)); }
+}
+$("#btnUpgradeSyncKey").addEventListener("click", ()=>{
+  showConfirm(
+    "Vou gerar uma chave forte aleatória, copiar seus dados para ela e desativar a chave antiga. Depois você precisa digitar a nova chave no outro aparelho. Sincronize o outro aparelho antes, para nada ficar só nele. Continuar?",
+    "Trocar chave",
+    async ()=>{
+      const oldKey = getSyncKey();
+      await waitSyncIdle();
+      if(!(await syncWithCloud({ silent: true }))){ toast("Sem conexão com a nuvem. Tente de novo mais tarde."); return; }
+      const newKey = generateSyncKey();
+      setSyncKey(newKey);
+      $("#syncKeyInput").value = newKey;
+      await waitSyncIdle();
+      if(!(await syncWithCloud({ silent: true }))){
+        setSyncKey(oldKey); $("#syncKeyInput").value = oldKey;
+        toast("Não foi possível criar a nova chave. Nada foi alterado.");
+        return;
+      }
+      try{ await fetch(SYNC_ENDPOINT, { method: "DELETE", headers: { "x-sync-key": oldKey } }); }catch(e){}
+      updateSyncUI();
+      showConfirm(`Nova chave: ${newKey}\n\nDigite essa chave no outro aparelho em Ajustes › Sincronização. A chave antiga foi desativada.`, "Copiar chave", ()=>copyText(newKey));
+    }
+  );
+});
 $("#syncKeyInput").addEventListener("keydown", e=>{
   if(e.key === "Enter"){ e.preventDefault(); handleSaveSyncKey(); }
 });
